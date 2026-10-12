@@ -18,11 +18,14 @@ import { LoadingState } from './components/common/LoadingState';
 import { ErrorState } from './components/common/ErrorState';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ProfileOverview } from './components/profile/ProfileOverview';
-import { RepoList } from './components/profile/RepoList';
+import { RepoExplorer } from './components/profile/RepoExplorer';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<GitHubUser | null>(null);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [repoPage, setRepoPage] = useState<number>(1);
+  const [hasMoreRepos, setHasMoreRepos] = useState<boolean>(false);
+  const [isLoadingMoreRepos, setIsLoadingMoreRepos] = useState<boolean>(false);
   const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
   const [viewState, setViewState] = useState<ViewState>('idle');
   const [activeTab, setActiveTab] = useState<NavigationTab>('overview');
@@ -31,6 +34,7 @@ export function App() {
   // Reference to abort ongoing requests if a new one is launched or on unmount
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeSearchUserRef = useRef<string>('');
+
 
   // Initial rate limit fetch on mount
   useEffect(() => {
@@ -66,6 +70,7 @@ export function App() {
     setViewState('loading');
     setError(null);
     setLastSearchedUser(cleanUsername);
+    setRepoPage(1);
 
     try {
       // 1. Fetch user profile
@@ -74,14 +79,16 @@ export function App() {
         setRateLimit(userRes.rateLimit);
       }
 
-      // 2. Fetch recent public repos
-      const reposRes = await githubService.getUserRepos(cleanUsername, 30, 1, controller.signal);
+      // 2. Fetch initial batch of public repos
+      const reposRes = await githubService.getUserRepos(cleanUsername, 30, 1, 'pushed', controller.signal);
       if (reposRes.rateLimit) {
         setRateLimit(reposRes.rateLimit);
       }
 
       setCurrentUser(userRes.data);
       setRepos(reposRes.data);
+      // Determine if there are more repositories to fetch
+      setHasMoreRepos(Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos);
       setViewState('success');
       setActiveTab('overview');
     } catch (err: unknown) {
@@ -104,6 +111,46 @@ export function App() {
     }
   }, [viewState]);
 
+  const handleLoadMoreRepos = useCallback(async () => {
+    if (!currentUser || isLoadingMoreRepos || !hasMoreRepos) return;
+
+    setIsLoadingMoreRepos(true);
+    const nextPage = repoPage + 1;
+
+    try {
+      const res = await githubService.getUserRepos(
+        currentUser.login,
+        30,
+        nextPage,
+        'pushed'
+      );
+
+      if (res.rateLimit) {
+        setRateLimit(res.rateLimit);
+      }
+
+      setRepos((prev) => {
+        // Prevent duplicate repository IDs when appending
+        const existingIds = new Set(prev.map((r) => r.id));
+        const newUniqueRepos = res.data.filter((r) => !existingIds.has(r.id));
+        const combined = [...prev, ...newUniqueRepos];
+
+        // Update whether there are further pages
+        const remainingCount = currentUser.public_repos - combined.length;
+        setHasMoreRepos(Boolean(res.hasNextPage) || (res.data.length === 30 && remainingCount > 0));
+        return combined;
+      });
+
+      setRepoPage(nextPage);
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      // Do not replace the existing page view, but notify in state if appropriate
+      console.error('Failed to load more repositories:', apiErr.message);
+    } finally {
+      setIsLoadingMoreRepos(false);
+    }
+  }, [currentUser, isLoadingMoreRepos, hasMoreRepos, repoPage]);
+
   const handleReset = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -112,11 +159,15 @@ export function App() {
     activeSearchUserRef.current = '';
     setCurrentUser(null);
     setRepos([]);
+    setRepoPage(1);
+    setHasMoreRepos(false);
+    setIsLoadingMoreRepos(false);
     setViewState('idle');
     setError(null);
     setLastSearchedUser('');
     setActiveTab('overview');
   };
+
 
 
   return (
@@ -189,35 +240,32 @@ export function App() {
                 hidden={activeTab !== 'repositories'}
               >
                 {currentUser ? (
-                  <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#30363d]">
-                      <div>
-                        <h2 className="text-lg font-bold text-neutral-100">
-                          Repositories for @{currentUser.login}
-                        </h2>
-                        <p className="text-xs text-neutral-400 mt-0.5">
-                          Showing {repos.length} repositories sorted by recent push activity
-                        </p>
-                      </div>
-                    </div>
-                    <RepoList repos={repos} />
-                  </div>
+                  <RepoExplorer
+                    repos={repos}
+                    totalPublicRepos={currentUser.public_repos}
+                    username={currentUser.login}
+                    isLoadingMore={isLoadingMoreRepos}
+                    hasMore={hasMoreRepos}
+                    onLoadMore={handleLoadMoreRepos}
+                  />
                 ) : (
                   <TabPlaceholder
-                    title="Repository Deep-Dive"
+                    title="Repository Explorer"
                     badge="Ready upon search"
                     icon={FolderGit2}
-                    description="Inspect and filter public repositories for any GitHub user."
+                    description="Search, filter, and inspect public repositories for any GitHub user."
                     contextNote="Search for any developer above (e.g. torvalds or vercel) to load repositories."
                     plannedFeatures={[
-                      'Sort repositories by stars, forks, or latest update',
-                      'Filter by primary programming language',
-                      'Inspect fork vs source repository ratios',
-                      'Direct link to GitHub issues and discussions',
+                      'Search by repository name and description in real-time',
+                      'Filter by programming language detected across repositories',
+                      'Filter by source, forked, or archived status',
+                      'Sort by stars, forks, name, or last push recency',
+                      'Incremental pagination via GitHub REST API',
                     ]}
                   />
                 )}
               </div>
+
 
               {/* TAB 3: ANALYTICS (Transparent placeholder) */}
               <div

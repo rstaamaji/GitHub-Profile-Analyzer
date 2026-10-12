@@ -103,17 +103,18 @@ class GitHubService {
 
 
   /**
-   * Fetch public repositories for user (sorted by updated, up to 100)
+   * Fetch public repositories for user (supports sort, perPage, page, signal)
    */
   async getUserRepos(
     username: string,
     perPage: number = 30,
     page: number = 1,
+    sort: 'pushed' | 'updated' | 'full_name' | 'created' = 'pushed',
     signal?: AbortSignal
-  ): Promise<{ data: GitHubRepo[]; rateLimit?: RateLimitInfo }> {
+  ): Promise<{ data: GitHubRepo[]; rateLimit?: RateLimitInfo; hasNextPage?: boolean }> {
     const cleanUsername = username.trim().toLowerCase();
     const url = new URL(`${GITHUB_API_BASE}/users/${encodeURIComponent(cleanUsername)}/repos`);
-    url.searchParams.set('sort', 'pushed');
+    url.searchParams.set('sort', sort);
     url.searchParams.set('per_page', perPage.toString());
     url.searchParams.set('page', page.toString());
 
@@ -124,6 +125,9 @@ class GitHubService {
       });
 
       const rateLimit = this.parseRateLimit(response);
+      const linkHeader = response.headers.get('link');
+      const hasNextPage = Boolean(linkHeader && linkHeader.includes('rel="next"'));
+
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({ message: response.statusText }));
@@ -131,7 +135,7 @@ class GitHubService {
       }
 
       const data: GitHubRepo[] = await response.json();
-      return { data, rateLimit };
+      return { data, rateLimit, hasNextPage };
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
         throw err;

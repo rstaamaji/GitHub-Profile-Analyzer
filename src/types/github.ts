@@ -66,6 +66,8 @@ export type ViewState = 'idle' | 'loading' | 'success' | 'error';
 
 export type NavigationTab = 'overview' | 'repositories' | 'analytics' | 'compare';
 
+export type RepoSortOption = 'pushed' | 'stars' | 'name' | 'forks';
+
 export interface ApiError {
   message: string;
   status?: number;
