@@ -45,7 +45,6 @@ export const Navigation: React.FC<NavigationProps> = ({
       id: 'analytics',
       label: 'Analytics',
       icon: BarChart3,
-      statusNote: 'Preview',
     },
     {
       id: 'compare',
@@ -53,6 +52,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       icon: GitCompare,
       statusNote: 'Preview',
     },
+
   ];
 
   return (

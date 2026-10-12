@@ -68,12 +68,32 @@ export interface ReadmeData {
 }
 
 
+export interface LanguageStat {
+  language: string;
+  count: number;
+  percentage: number; // Percentage of analyzed repositories that list this as primary language
+  color: string;
+}
+
+export interface LanguageAnalyticsResult {
+  totalAnalyzed: number; // Total eligible repositories analyzed (forks excluded by default)
+  totalWithLanguage: number; // Repositories with a detected primary language
+  totalWithoutLanguage: number; // Repositories without a primary language (e.g. config, docs)
+  forksExcludedCount: number; // Number of forks omitted from analysis
+  distinctLanguagesCount: number; // Count of distinct languages found
+  topLanguage: LanguageStat | null; // Most frequently represented primary language
+  breakdown: LanguageStat[]; // Ranked list of languages by repository count
+  isPartial: boolean; // True if user has more public repositories than currently fetched
+  totalPublicRepos: number; // Total public repositories on user's GitHub account
+}
+
 export interface RateLimitInfo {
   limit: number;
   remaining: number;
   reset: number;
   used: number;
 }
+
 
 export interface ProfileAnalysisData {
   user: GitHubUser;

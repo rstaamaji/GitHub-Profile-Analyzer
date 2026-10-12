@@ -20,6 +20,8 @@ import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ProfileOverview } from './components/profile/ProfileOverview';
 import { RepoExplorer } from './components/profile/RepoExplorer';
 import { RepoDetailView } from './components/profile/RepoDetailView';
+import { LanguageAnalyticsView } from './components/analytics/LanguageAnalyticsView';
+
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<GitHubUser | null>(null);
@@ -283,31 +285,39 @@ export function App() {
 
 
 
-              {/* TAB 3: ANALYTICS (Transparent placeholder) */}
+              {/* TAB 3: ANALYTICS */}
               <div
                 role="tabpanel"
                 id="panel-analytics"
                 aria-labelledby="tab-analytics"
                 hidden={activeTab !== 'analytics'}
               >
-                <TabPlaceholder
-                  title="Developer Analytics & Visualizations"
-                  badge="Stage 3 Implementation"
-                  icon={BarChart3}
-                  description="Language composition breakdowns, repository activity patterns, and stargazer distribution graphs."
-                  contextNote={
-                    currentUser
-                      ? `Recharts data structures will be bound to @${currentUser.login}'s authentic repository payload.`
-                      : 'Search a developer above to analyze language distributions once charts are connected.'
-                  }
-                  plannedFeatures={[
-                    'Language distribution donut chart powered by Recharts',
-                    'Stars per repository bar distribution',
-                    'Commit recency and repository momentum score',
-                    'Aggregated byte counts and top open-source licensing',
-                  ]}
-                />
+                {currentUser ? (
+                  <LanguageAnalyticsView
+                    repos={repos}
+                    totalPublicRepos={currentUser.public_repos}
+                    username={currentUser.login}
+                    hasMoreRepos={hasMoreRepos}
+                    isLoadingMore={isLoadingMoreRepos}
+                    onFetchMoreRepos={handleLoadMoreRepos}
+                  />
+                ) : (
+                  <TabPlaceholder
+                    title="Programming Language Analytics"
+                    badge="Ready upon search"
+                    icon={BarChart3}
+                    description="Analyze programming language distribution and repository-count breakdown for any public developer."
+                    contextNote="Search for any developer above (e.g. torvalds, gaearon, or vercel) to view language analytics."
+                    plannedFeatures={[
+                      'Accurate repository primary language distribution using Recharts',
+                      'Excludes forked repositories by default to measure original author works',
+                      'Full ranked breakdown with repository counts and exact percentages',
+                      'Clear notification of partial vs complete dataset coverage',
+                    ]}
+                  />
+                )}
               </div>
+
 
               {/* TAB 4: COMPARE (Transparent placeholder) */}
               <div
