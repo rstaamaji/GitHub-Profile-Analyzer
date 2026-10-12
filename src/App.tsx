@@ -236,11 +236,23 @@ export function App() {
                 hidden={activeTab !== 'overview'}
               >
                 {currentUser ? (
-                  <ProfileOverview user={currentUser} repos={repos} />
+                  <ProfileOverview
+                    user={currentUser}
+                    repos={repos}
+                    hasMoreRepos={hasMoreRepos}
+                    isLoadingMore={isLoadingMoreRepos}
+                    onFetchMoreRepos={handleLoadMoreRepos}
+                    onSelectRepo={(repo) => {
+                      setSelectedRepo(repo);
+                      setActiveTab('repositories');
+                    }}
+                    onNavigateToTab={(tab) => setActiveTab(tab)}
+                  />
                 ) : (
                   <EmptyState onSelectSuggestion={handleSearch} />
                 )}
               </div>
+
 
               {/* TAB 2: REPOSITORIES */}
               <div
