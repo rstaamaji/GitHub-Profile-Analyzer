@@ -129,11 +129,29 @@ export interface RateLimitInfo {
 }
 
 
+export interface DashboardOverviewStats {
+  totalPublicRepos: number;
+  followers: number;
+  following: number;
+  publicGists: number;
+  totalLoadedRepos: number;
+  originalReposCount: number; // Non-forked repositories in loaded dataset
+  forkedReposCount: number; // Forked repositories in loaded dataset
+  archivedReposCount: number;
+  totalBatchStars: number; // Sum of stargazers across loaded repositories
+  totalBatchForks: number; // Sum of forks across loaded repositories
+  mostStarredRepo: GitHubRepo | null;
+  mostRecentlyPushedRepo: GitHubRepo | null;
+  topLanguage: { language: string; count: number; percentage: number; color: string } | null;
+  isPartial: boolean;
+}
+
 export interface ProfileAnalysisData {
   user: GitHubUser;
   repos: GitHubRepo[];
   rateLimit?: RateLimitInfo;
 }
+
 
 export type ViewState = 'idle' | 'loading' | 'success' | 'error';
 
