@@ -1,4 +1,4 @@
-import type { GitHubRepo, GitHubUser, RateLimitInfo, ApiError } from '../types/github';
+import type { GitHubRepo, GitHubUser, RateLimitInfo, ApiError, ReadmeData } from '../types/github';
 
 const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -152,9 +152,120 @@ class GitHubService {
 
 
   /**
+   * Fetch complete repository detail: GET /repos/{owner}/{repo}
+   */
+  async getRepoDetail(
+    owner: string,
+    repo: string,
+    signal?: AbortSignal
+  ): Promise<{ data: GitHubRepo; rateLimit?: RateLimitInfo }> {
+    const cleanOwner = owner.trim().toLowerCase();
+    const cleanRepo = repo.trim();
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+        signal,
+      });
+
+      const rateLimit = this.parseRateLimit(response);
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        this.handleResponseError(response.status, errorBody.message, response.headers);
+      }
+
+      const data: GitHubRepo = await response.json();
+      return { data, rateLimit };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+        throw err;
+      }
+      if (err && typeof err === 'object' && 'status' in err && 'message' in err) {
+        throw err;
+      }
+      const error: ApiError = {
+        message: 'Network connection failed while fetching repository details.',
+      };
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch repository README: GET /repos/{owner}/{repo}/readme
+   */
+  async getRepoReadme(
+    owner: string,
+    repo: string,
+    signal?: AbortSignal
+  ): Promise<{ data: ReadmeData | null; rateLimit?: RateLimitInfo }> {
+    const cleanOwner = owner.trim().toLowerCase();
+    const cleanRepo = repo.trim();
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/readme`;
+
+    try {
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+        signal,
+      });
+
+      const rateLimit = this.parseRateLimit(response);
+
+      if (response.status === 404) {
+        // Repository has no README
+        return { data: null, rateLimit };
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        this.handleResponseError(response.status, errorBody.message, response.headers);
+      }
+
+      const raw = await response.json();
+      // Decode Base64 content
+      let decodedContent = '';
+      if (raw.content && raw.encoding === 'base64') {
+        try {
+          const binaryString = atob(raw.content.replace(/\s/g, ''));
+          const bytes = Uint8Array.from(binaryString, (m) => m.charCodeAt(0));
+          decodedContent = new TextDecoder().decode(bytes);
+        } catch {
+          decodedContent = atob(raw.content.replace(/\s/g, ''));
+        }
+      } else if (raw.content) {
+        decodedContent = raw.content;
+      }
+
+      const data: ReadmeData = {
+        content: decodedContent,
+        html_url: raw.html_url,
+        download_url: raw.download_url,
+        name: raw.name,
+        path: raw.path,
+        size: raw.size,
+      };
+
+      return { data, rateLimit };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+        throw err;
+      }
+      if (err && typeof err === 'object' && 'status' in err && 'message' in err) {
+        throw err;
+      }
+      const error: ApiError = {
+        message: 'Network connection failed while fetching repository README.',
+      };
+      throw error;
+    }
+  }
+
+  /**
    * Check current GitHub API rate limit status
    */
   async getRateLimit(): Promise<RateLimitInfo | null> {
+
     try {
       const response = await fetch(`${GITHUB_API_BASE}/rate_limit`, {
         headers: this.getHeaders(),

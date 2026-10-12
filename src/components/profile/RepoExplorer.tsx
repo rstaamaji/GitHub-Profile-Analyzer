@@ -19,6 +19,7 @@ interface RepoExplorerProps {
   isLoadingMore?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  onSelectRepo?: (repo: GitHubRepo) => void;
 }
 
 export const RepoExplorer: React.FC<RepoExplorerProps> = ({
@@ -28,7 +29,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   isLoadingMore = false,
   hasMore = false,
   onLoadMore,
+  onSelectRepo,
 }) => {
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [sortBy, setSortBy] = useState<RepoSortOption>('pushed');
@@ -257,10 +260,11 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
       {filteredAndSortedRepos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredAndSortedRepos.map((repo) => (
-            <RepoCard key={repo.id} repo={repo} />
+            <RepoCard key={repo.id} repo={repo} onSelectRepo={onSelectRepo} />
           ))}
         </div>
       ) : (
+
         /* Empty Filter Results State */
         <div className="p-10 text-center rounded-xl bg-[#161b22] border border-[#30363d] space-y-3">
           <div className="w-10 h-10 mx-auto rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-neutral-400">

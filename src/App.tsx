@@ -19,10 +19,12 @@ import { ErrorState } from './components/common/ErrorState';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ProfileOverview } from './components/profile/ProfileOverview';
 import { RepoExplorer } from './components/profile/RepoExplorer';
+import { RepoDetailView } from './components/profile/RepoDetailView';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<GitHubUser | null>(null);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null);
   const [repoPage, setRepoPage] = useState<number>(1);
   const [hasMoreRepos, setHasMoreRepos] = useState<boolean>(false);
   const [isLoadingMoreRepos, setIsLoadingMoreRepos] = useState<boolean>(false);
@@ -34,6 +36,7 @@ export function App() {
   // Reference to abort ongoing requests if a new one is launched or on unmount
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeSearchUserRef = useRef<string>('');
+
 
 
   // Initial rate limit fetch on mount
@@ -69,8 +72,10 @@ export function App() {
 
     setViewState('loading');
     setError(null);
+    setSelectedRepo(null);
     setLastSearchedUser(cleanUsername);
     setRepoPage(1);
+
 
     try {
       // 1. Fetch user profile
@@ -159,7 +164,9 @@ export function App() {
     activeSearchUserRef.current = '';
     setCurrentUser(null);
     setRepos([]);
+    setSelectedRepo(null);
     setRepoPage(1);
+
     setHasMoreRepos(false);
     setIsLoadingMoreRepos(false);
     setViewState('idle');
@@ -239,7 +246,14 @@ export function App() {
                 aria-labelledby="tab-repositories"
                 hidden={activeTab !== 'repositories'}
               >
-                {currentUser ? (
+                {selectedRepo ? (
+                  <RepoDetailView
+                    owner={selectedRepo.owner?.login || currentUser?.login || lastSearchedUser}
+                    repoName={selectedRepo.name}
+                    onBack={() => setSelectedRepo(null)}
+                    cachedRepo={selectedRepo}
+                  />
+                ) : currentUser ? (
                   <RepoExplorer
                     repos={repos}
                     totalPublicRepos={currentUser.public_repos}
@@ -247,6 +261,7 @@ export function App() {
                     isLoadingMore={isLoadingMoreRepos}
                     hasMore={hasMoreRepos}
                     onLoadMore={handleLoadMoreRepos}
+                    onSelectRepo={(repo) => setSelectedRepo(repo)}
                   />
                 ) : (
                   <TabPlaceholder
@@ -260,11 +275,12 @@ export function App() {
                       'Filter by programming language detected across repositories',
                       'Filter by source, forked, or archived status',
                       'Sort by stars, forks, name, or last push recency',
-                      'Incremental pagination via GitHub REST API',
+                      'Inspect complete repository details and safe README previews',
                     ]}
                   />
                 )}
               </div>
+
 
 
               {/* TAB 3: ANALYTICS (Transparent placeholder) */}

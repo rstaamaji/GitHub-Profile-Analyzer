@@ -47,7 +47,26 @@ export interface GitHubRepo {
     spdx_id: string;
     url: string | null;
   } | null;
+  owner?: {
+    login: string;
+    id: number;
+    avatar_url: string;
+    html_url: string;
+  };
+  default_branch?: string;
+  subscribers_count?: number;
+  network_count?: number;
 }
+
+export interface ReadmeData {
+  content: string; // decoded text
+  html_url?: string;
+  download_url?: string;
+  name?: string;
+  path?: string;
+  size?: number;
+}
+
 
 export interface RateLimitInfo {
   limit: number;

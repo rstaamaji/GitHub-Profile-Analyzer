@@ -13,9 +13,11 @@ import type { GitHubRepo } from '../../types/github';
 
 interface RepoCardProps {
   repo: GitHubRepo;
+  onSelectRepo?: (repo: GitHubRepo) => void;
 }
 
 const LANGUAGE_COLORS: Record<string, string> = {
+
   TypeScript: '#3178c6',
   JavaScript: '#f1e05a',
   Python: '#3572A5',
@@ -36,7 +38,7 @@ const LANGUAGE_COLORS: Record<string, string> = {
   Scala: '#c22d40',
 };
 
-export const RepoCard: React.FC<RepoCardProps> = ({ repo }) => {
+export const RepoCard: React.FC<RepoCardProps> = ({ repo, onSelectRepo }) => {
   const updatedDate = new Date(repo.pushed_at || repo.updated_at).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -57,15 +59,25 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo }) => {
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <a
-                href={repo.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
-              >
-                <span>{repo.name}</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
-              </a>
+              {onSelectRepo ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectRepo(repo)}
+                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm text-left cursor-pointer"
+                >
+                  <span>{repo.name}</span>
+                </button>
+              ) : (
+                <a
+                  href={repo.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
+                >
+                  <span>{repo.name}</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
+                </a>
+              )}
 
               {/* Public Badge */}
               <span className="text-[10px] font-mono px-2 py-0.2 rounded-full border border-[#30363d] text-neutral-400 bg-[#21262d]">
@@ -76,6 +88,17 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo }) => {
 
           {/* Fork / Archived Badges */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {onSelectRepo && (
+              <a
+                href={repo.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open on GitHub"
+                className="p-1 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+              </a>
+            )}
             {repo.fork && (
               <span
                 title="Forked repository"
@@ -96,6 +119,7 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo }) => {
             )}
           </div>
         </div>
+
 
         {/* Repository Description */}
         {repo.description ? (
