@@ -104,6 +104,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
                 </a>
               </div>
             )}
+
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
               <span>Joined {memberSince}</span>

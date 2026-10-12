@@ -65,22 +65,42 @@ class GitHubService {
   /**
    * Fetch user public profile
    */
-  async getUser(username: string): Promise<{ data: GitHubUser; rateLimit?: RateLimitInfo }> {
+  async getUser(
+    username: string,
+    signal?: AbortSignal
+  ): Promise<{ data: GitHubUser; rateLimit?: RateLimitInfo }> {
     const cleanUsername = username.trim().toLowerCase();
-    const response = await fetch(`${GITHUB_API_BASE}/users/${encodeURIComponent(cleanUsername)}`, {
-      headers: this.getHeaders(),
-    });
+    try {
+      const response = await fetch(`${GITHUB_API_BASE}/users/${encodeURIComponent(cleanUsername)}`, {
+        headers: this.getHeaders(),
+        signal,
+      });
 
-    const rateLimit = this.parseRateLimit(response);
+      const rateLimit = this.parseRateLimit(response);
 
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({ message: response.statusText }));
-      this.handleResponseError(response.status, errorBody.message, response.headers);
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        this.handleResponseError(response.status, errorBody.message, response.headers);
+      }
+
+      const data: GitHubUser = await response.json();
+      return { data, rateLimit };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+        throw err;
+      }
+      // If error already shaped by handleResponseError, rethrow
+      if (err && typeof err === 'object' && 'status' in err && 'message' in err) {
+        throw err;
+      }
+      // Network or unexpected failure
+      const error: ApiError = {
+        message: 'Network connection failed. Please check your internet connectivity or try again later.',
+      };
+      throw error;
     }
-
-    const data: GitHubUser = await response.json();
-    return { data, rateLimit };
   }
+
 
   /**
    * Fetch public repositories for user (sorted by updated, up to 100)
@@ -88,7 +108,8 @@ class GitHubService {
   async getUserRepos(
     username: string,
     perPage: number = 30,
-    page: number = 1
+    page: number = 1,
+    signal?: AbortSignal
   ): Promise<{ data: GitHubRepo[]; rateLimit?: RateLimitInfo }> {
     const cleanUsername = username.trim().toLowerCase();
     const url = new URL(`${GITHUB_API_BASE}/users/${encodeURIComponent(cleanUsername)}/repos`);
@@ -96,20 +117,35 @@ class GitHubService {
     url.searchParams.set('per_page', perPage.toString());
     url.searchParams.set('page', page.toString());
 
-    const response = await fetch(url.toString(), {
-      headers: this.getHeaders(),
-    });
+    try {
+      const response = await fetch(url.toString(), {
+        headers: this.getHeaders(),
+        signal,
+      });
 
-    const rateLimit = this.parseRateLimit(response);
+      const rateLimit = this.parseRateLimit(response);
 
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({ message: response.statusText }));
-      this.handleResponseError(response.status, errorBody.message, response.headers);
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        this.handleResponseError(response.status, errorBody.message, response.headers);
+      }
+
+      const data: GitHubRepo[] = await response.json();
+      return { data, rateLimit };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+        throw err;
+      }
+      if (err && typeof err === 'object' && 'status' in err && 'message' in err) {
+        throw err;
+      }
+      const error: ApiError = {
+        message: 'Network connection failed while fetching user repositories.',
+      };
+      throw error;
     }
-
-    const data: GitHubRepo[] = await response.json();
-    return { data, rateLimit };
   }
+
 
   /**
    * Check current GitHub API rate limit status

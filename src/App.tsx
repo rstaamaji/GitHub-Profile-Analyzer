@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BarChart3, GitCompare, FolderGit2 } from 'lucide-react';
 import type {
   GitHubRepo,
@@ -28,30 +28,54 @@ export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('overview');
   const [error, setError] = useState<ApiError | null>(null);
   const [lastSearchedUser, setLastSearchedUser] = useState<string>('');
+  // Reference to abort ongoing requests if a new one is launched or on unmount
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const activeSearchUserRef = useRef<string>('');
 
   // Initial rate limit fetch on mount
   useEffect(() => {
     githubService.getRateLimit().then((info) => {
       if (info) setRateLimit(info);
     });
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleSearch = useCallback(async (username: string) => {
-    if (!username.trim()) return;
+    const cleanUsername = username.trim();
+    if (!cleanUsername) return;
+
+    // Prevent submitting the same username if already loading
+    if (viewState === 'loading' && cleanUsername.toLowerCase() === activeSearchUserRef.current.toLowerCase()) {
+      return;
+    }
+
+    // Cancel any previous in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    activeSearchUserRef.current = cleanUsername;
 
     setViewState('loading');
     setError(null);
-    setLastSearchedUser(username);
+    setLastSearchedUser(cleanUsername);
 
     try {
       // 1. Fetch user profile
-      const userRes = await githubService.getUser(username);
+      const userRes = await githubService.getUser(cleanUsername, controller.signal);
       if (userRes.rateLimit) {
         setRateLimit(userRes.rateLimit);
       }
 
       // 2. Fetch recent public repos
-      const reposRes = await githubService.getUserRepos(username, 30);
+      const reposRes = await githubService.getUserRepos(cleanUsername, 30, 1, controller.signal);
       if (reposRes.rateLimit) {
         setRateLimit(reposRes.rateLimit);
       }
@@ -59,9 +83,13 @@ export function App() {
       setCurrentUser(userRes.data);
       setRepos(reposRes.data);
       setViewState('success');
-      // Default to overview on fresh search
       setActiveTab('overview');
     } catch (err: unknown) {
+      // Ignore AbortError caused by new searches
+      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+        return;
+      }
+
       const apiErr = err as ApiError;
       setError({
         message: apiErr.message || 'Failed to retrieve profile data.',
@@ -69,10 +97,19 @@ export function App() {
         resetTime: apiErr.resetTime,
       });
       setViewState('error');
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
-  }, []);
+  }, [viewState]);
 
   const handleReset = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    activeSearchUserRef.current = '';
     setCurrentUser(null);
     setRepos([]);
     setViewState('idle');
@@ -80,6 +117,7 @@ export function App() {
     setLastSearchedUser('');
     setActiveTab('overview');
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0d1117] text-[#e6edf3]">
