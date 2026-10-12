@@ -20,7 +20,8 @@ import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ProfileOverview } from './components/profile/ProfileOverview';
 import { RepoExplorer } from './components/profile/RepoExplorer';
 import { RepoDetailView } from './components/profile/RepoDetailView';
-import { LanguageAnalyticsView } from './components/analytics/LanguageAnalyticsView';
+import { AnalyticsContainer } from './components/analytics/AnalyticsContainer';
+
 
 
 export function App() {
@@ -293,30 +294,35 @@ export function App() {
                 hidden={activeTab !== 'analytics'}
               >
                 {currentUser ? (
-                  <LanguageAnalyticsView
+                  <AnalyticsContainer
                     repos={repos}
                     totalPublicRepos={currentUser.public_repos}
                     username={currentUser.login}
                     hasMoreRepos={hasMoreRepos}
                     isLoadingMore={isLoadingMoreRepos}
                     onFetchMoreRepos={handleLoadMoreRepos}
+                    onSelectRepo={(repo) => {
+                      setSelectedRepo(repo);
+                      setActiveTab('repositories');
+                    }}
                   />
                 ) : (
                   <TabPlaceholder
-                    title="Programming Language Analytics"
+                    title="Programming Language & Activity Analytics"
                     badge="Ready upon search"
                     icon={BarChart3}
-                    description="Analyze programming language distribution and repository-count breakdown for any public developer."
-                    contextNote="Search for any developer above (e.g. torvalds, gaearon, or vercel) to view language analytics."
+                    description="Analyze programming language shares and repository activity cadence for any public developer."
+                    contextNote="Search for any developer above (e.g. torvalds, gaearon, or vercel) to view analytics."
                     plannedFeatures={[
                       'Accurate repository primary language distribution using Recharts',
-                      'Excludes forked repositories by default to measure original author works',
+                      'Repository activity cadence grouped across 30 days, 90 days, or 12 months',
+                      'Clear distinction between code pushes and repository metadata updates',
                       'Full ranked breakdown with repository counts and exact percentages',
-                      'Clear notification of partial vs complete dataset coverage',
                     ]}
                   />
                 )}
               </div>
+
 
 
               {/* TAB 4: COMPARE (Transparent placeholder) */}
