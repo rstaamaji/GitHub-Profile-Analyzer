@@ -5,19 +5,21 @@ import type { RateLimitInfo } from '../../types/github';
 interface HeaderProps {
   rateLimit?: RateLimitInfo | null;
   onResetToHome?: () => void;
+  activeUsername?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome }) => {
+export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, activeUsername }) => {
   return (
     <header className="border-b border-[#30363d] bg-[#0d1117]/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <button
           onClick={onResetToHome}
           type="button"
-          className="flex items-center gap-3 text-left focus:outline-none cursor-pointer group"
+          aria-label="GitHub Profile Analyzer Home"
+          className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 rounded-lg p-1 cursor-pointer group transition"
         >
           <div className="w-8 h-8 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center text-white group-hover:border-[#8b949e] transition">
-            <Terminal className="w-4 h-4 text-emerald-400" />
+            <Terminal className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           </div>
           <div>
             <div className="text-sm font-bold tracking-tight text-neutral-100 flex items-center gap-1.5">
@@ -27,7 +29,11 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome }) => {
               </span>
             </div>
             <div className="text-[11px] text-neutral-500 hidden sm:block">
-              Public Developer Intelligence
+              {activeUsername ? (
+                <span className="text-neutral-400 font-mono">Analyzing @{activeUsername}</span>
+              ) : (
+                'Public Developer Intelligence'
+              )}
             </div>
           </div>
         </button>

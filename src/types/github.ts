@@ -64,6 +64,8 @@ export interface ProfileAnalysisData {
 
 export type ViewState = 'idle' | 'loading' | 'success' | 'error';
 
+export type NavigationTab = 'overview' | 'repositories' | 'analytics' | 'compare';
+
 export interface ApiError {
   message: string;
   status?: number;

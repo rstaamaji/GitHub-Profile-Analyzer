@@ -8,9 +8,14 @@ import { RepoList } from './RepoList';
 interface ProfileOverviewProps {
   user: GitHubUser;
   repos: GitHubRepo[];
+  showReposList?: boolean;
 }
 
-export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, repos }) => {
+export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
+  user,
+  repos,
+  showReposList = true,
+}) => {
   // Aggregate real statistics derived exclusively from fetched data
   const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
   const totalForks = repos.reduce((acc, repo) => acc + repo.forks_count, 0);
@@ -58,8 +63,9 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, repos })
         />
       </div>
 
-      {/* Repository Listing */}
-      <RepoList repos={repos} />
+      {/* Repository Listing if enabled */}
+      {showReposList && <RepoList repos={repos} />}
     </div>
   );
 };
+
