@@ -114,22 +114,7 @@ export class GitHubService {
   }
 
   private parseRateLimit(response: Response): RateLimitInfo | undefined {
-    const limit = response.headers.get('x-ratelimit-limit');
-    const remaining = response.headers.get('x-ratelimit-remaining');
-    const reset = response.headers.get('x-ratelimit-reset');
-    const used = response.headers.get('x-ratelimit-used');
-
-    if (limit !== null && remaining !== null && reset !== null) {
-      const parsed: RateLimitInfo = {
-        limit: parseInt(limit, 10),
-        remaining: parseInt(remaining, 10),
-        reset: parseInt(reset, 10),
-        used: used !== null ? parseInt(used, 10) : 0,
-      };
-      this.lastKnownRateLimit = parsed;
-      return parsed;
-    }
-    return undefined;
+    return this.parseRateLimitFromHeaders(response.headers);
   }
 
   private readCache<T>(key: string): CacheEntry<T> | null {
@@ -318,14 +303,21 @@ export class GitHubService {
     const used = headers.get('x-ratelimit-used');
 
     if (limit !== null && remaining !== null && reset !== null) {
-      const parsed: RateLimitInfo = {
-        limit: parseInt(limit, 10),
-        remaining: parseInt(remaining, 10),
-        reset: parseInt(reset, 10),
-        used: used !== null ? parseInt(used, 10) : 0,
-      };
-      this.lastKnownRateLimit = parsed;
-      return parsed;
+      const limitNum = parseInt(limit, 10);
+      const remainingNum = parseInt(remaining, 10);
+      const resetNum = parseInt(reset, 10);
+      const usedNum = used !== null ? parseInt(used, 10) : 0;
+
+      if (!Number.isNaN(limitNum) && !Number.isNaN(remainingNum) && !Number.isNaN(resetNum)) {
+        const parsed: RateLimitInfo = {
+          limit: limitNum,
+          remaining: remainingNum,
+          reset: resetNum,
+          used: Number.isNaN(usedNum) ? 0 : usedNum,
+        };
+        this.lastKnownRateLimit = parsed;
+        return parsed;
+      }
     }
     return undefined;
   }
@@ -372,6 +364,7 @@ export class GitHubService {
 
     if (!inFlight) {
       const sharedController = new AbortController();
+      let createdInFlight: InFlightRequest<T> | undefined;
 
       const requestPromise: Promise<ServiceResponse<T>> = (async () => {
         try {
@@ -413,15 +406,18 @@ export class GitHubService {
 
           throw err;
         } finally {
-          this.inFlightRequests.delete(cacheKey);
+          if (this.inFlightRequests.get(cacheKey) === createdInFlight) {
+            this.inFlightRequests.delete(cacheKey);
+          }
         }
       })();
 
-      inFlight = {
+      createdInFlight = {
         promise: requestPromise,
         controller: sharedController,
         activeSubscribers: 0,
       };
+      inFlight = createdInFlight;
       this.inFlightRequests.set(cacheKey, inFlight);
     }
 
@@ -442,7 +438,9 @@ export class GitHubService {
         currentInFlight.activeSubscribers = Math.max(0, currentInFlight.activeSubscribers - 1);
         if (currentInFlight.activeSubscribers === 0) {
           currentInFlight.controller.abort();
-          this.inFlightRequests.delete(cacheKey);
+          if (this.inFlightRequests.get(cacheKey) === currentInFlight) {
+            this.inFlightRequests.delete(cacheKey);
+          }
         }
         reject(createAbortError());
       };
@@ -502,7 +500,25 @@ export class GitHubService {
             throw this.buildApiError(response.status, errorBody.message, response.headers, 'user');
           }
 
-          const data: GitHubUser = await response.json();
+          let data: GitHubUser;
+          try {
+            data = (await response.json()) as GitHubUser;
+          } catch {
+            throw {
+              message: 'Unexpected response format from GitHub API (invalid JSON payload).',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
+          if (!data || typeof data !== 'object' || typeof data.login !== 'string') {
+            throw {
+              message: 'Unexpected user profile response format from GitHub API.',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
           return { data, rateLimit };
         } catch (err: unknown) {
           if (
@@ -576,7 +592,25 @@ export class GitHubService {
             );
           }
 
-          const data: GitHubRepo[] = await response.json();
+          let data: GitHubRepo[];
+          try {
+            data = (await response.json()) as GitHubRepo[];
+          } catch {
+            throw {
+              message: 'Unexpected response format from GitHub API (invalid JSON payload).',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
+          if (!Array.isArray(data)) {
+            throw {
+              message: 'Unexpected repository list response format from GitHub API.',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
           return { data, rateLimit, hasNextPage };
         } catch (err: unknown) {
           if (
@@ -643,7 +677,25 @@ export class GitHubService {
             );
           }
 
-          const data: GitHubRepo = await response.json();
+          let data: GitHubRepo;
+          try {
+            data = (await response.json()) as GitHubRepo;
+          } catch {
+            throw {
+              message: 'Unexpected response format from GitHub API (invalid JSON payload).',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
+          if (!data || typeof data !== 'object' || typeof data.name !== 'string') {
+            throw {
+              message: 'Unexpected repository detail response format from GitHub API.',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
           return { data, rateLimit };
         } catch (err: unknown) {
           if (
@@ -714,27 +766,46 @@ export class GitHubService {
             );
           }
 
-          const raw = await response.json();
+          let raw: Record<string, unknown>;
+          try {
+            raw = (await response.json()) as Record<string, unknown>;
+          } catch {
+            throw {
+              message: 'Unexpected response format from GitHub API (invalid JSON payload).',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
+          if (!raw || typeof raw !== 'object') {
+            throw {
+              message: 'Unexpected README response format from GitHub API.',
+              status: response.status,
+              rateLimit,
+            } satisfies ApiError;
+          }
+
           let decodedContent = '';
-          if (raw.content && raw.encoding === 'base64') {
+          const rawContent = typeof raw.content === 'string' ? raw.content : '';
+          if (rawContent && raw.encoding === 'base64') {
             try {
-              const binaryString = atob(raw.content.replace(/\s/g, ''));
+              const binaryString = atob(rawContent.replace(/\s/g, ''));
               const bytes = Uint8Array.from(binaryString, (m) => m.charCodeAt(0));
               decodedContent = new TextDecoder().decode(bytes);
             } catch {
-              decodedContent = atob(raw.content.replace(/\s/g, ''));
+              decodedContent = atob(rawContent.replace(/\s/g, ''));
             }
-          } else if (raw.content) {
-            decodedContent = raw.content;
+          } else if (rawContent) {
+            decodedContent = rawContent;
           }
 
           const data: ReadmeData = {
             content: decodedContent,
-            html_url: raw.html_url,
-            download_url: raw.download_url,
-            name: raw.name,
-            path: raw.path,
-            size: raw.size,
+            html_url: String(raw.html_url ?? ''),
+            download_url: raw.download_url ? String(raw.download_url) : null,
+            name: String(raw.name ?? 'README.md'),
+            path: String(raw.path ?? 'README.md'),
+            size: typeof raw.size === 'number' ? raw.size : decodedContent.length,
           };
 
           return { data, rateLimit };
@@ -769,11 +840,14 @@ export class GitHubService {
       });
       if (!response.ok) return null;
       const json = await response.json();
+      if (!json || !json.rate || typeof json.rate.limit !== 'number') {
+        return null;
+      }
       const info: RateLimitInfo = {
         limit: json.rate.limit,
         remaining: json.rate.remaining,
         reset: json.rate.reset,
-        used: json.rate.used,
+        used: json.rate.used ?? 0,
       };
       this.lastKnownRateLimit = info;
       return info;

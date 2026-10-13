@@ -13,7 +13,13 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
-import type { ApiError, GitHubRepo, RepoFilterType, RepoSortOption } from '../../types/github';
+import type {
+  ApiError,
+  GitHubRepo,
+  RepoFilterOptions,
+  RepoFilterType,
+  RepoSortOption,
+} from '../../types/github';
 import { extractAvailableLanguages, filterAndSortRepos } from '../../utils/repoFilterSort';
 import { RepoCard } from './RepoCard';
 
@@ -26,6 +32,7 @@ interface RepoExplorerProps {
   repoLoadError?: ApiError | null;
   onLoadMore?: () => void;
   onSelectRepo?: (repo: GitHubRepo) => void;
+  initialFilters?: RepoFilterOptions;
 }
 
 const MIN_STAR_OPTIONS: Array<{ label: string; value: number }> = [
@@ -47,13 +54,14 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   repoLoadError = null,
   onLoadMore,
   onSelectRepo,
+  initialFilters,
 }) => {
   const [prevUsername, setPrevUsername] = useState(username);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
-  const [filterType, setFilterType] = useState<RepoFilterType>('all');
-  const [minStars, setMinStars] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<RepoSortOption>('pushed');
+  const [searchQuery, setSearchQuery] = useState(initialFilters?.searchQuery ?? '');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialFilters?.language ?? 'all');
+  const [filterType, setFilterType] = useState<RepoFilterType>(initialFilters?.type ?? 'all');
+  const [minStars, setMinStars] = useState<number>(initialFilters?.minStars ?? 0);
+  const [sortBy, setSortBy] = useState<RepoSortOption>(initialFilters?.sortBy ?? 'pushed');
 
   // Reset filters cleanly if the active profile changes
   if (prevUsername !== username) {
