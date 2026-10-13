@@ -1,154 +1,101 @@
-import { calculateLanguageAnalytics } from './languageAnalytics';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { calculateLanguageAnalytics, getLanguageColor } from './languageAnalytics';
 import type { GitHubRepo } from '../types/github';
 
-// Minimal test runner for language analytics verification
-function runTests() {
-  const mockRepos: GitHubRepo[] = [
-    {
-      id: 1,
-      name: 'repo-ts-1',
-      full_name: 'test/repo-ts-1',
-      private: false,
-      html_url: '',
-      description: null,
-      fork: false,
-      url: '',
-      created_at: '',
-      updated_at: '',
-      pushed_at: '',
-      homepage: null,
-      size: 100,
-      stargazers_count: 10,
-      watchers_count: 10,
-      language: 'TypeScript',
-      forks_count: 2,
-      archived: false,
-      disabled: false,
-      open_issues_count: 0,
-      license: null,
-    },
-    {
-      id: 2,
-      name: 'repo-ts-2',
-      full_name: 'test/repo-ts-2',
-      private: false,
-      html_url: '',
-      description: null,
-      fork: false,
-      url: '',
-      created_at: '',
-      updated_at: '',
-      pushed_at: '',
-      homepage: null,
-      size: 200,
-      stargazers_count: 5,
-      watchers_count: 5,
-      language: 'TypeScript',
-      forks_count: 0,
-      archived: false,
-      disabled: false,
-      open_issues_count: 1,
-      license: null,
-    },
-    {
-      id: 3,
-      name: 'repo-py',
-      full_name: 'test/repo-py',
-      private: false,
-      html_url: '',
-      description: null,
-      fork: false,
-      url: '',
-      created_at: '',
-      updated_at: '',
-      pushed_at: '',
-      homepage: null,
-      size: 150,
-      stargazers_count: 20,
-      watchers_count: 20,
-      language: 'Python',
-      forks_count: 3,
-      archived: false,
-      disabled: false,
-      open_issues_count: 0,
-      license: null,
-    },
-    {
-      id: 4,
-      name: 'repo-fork-go',
-      full_name: 'test/repo-fork-go',
-      private: false,
-      html_url: '',
-      description: null,
-      fork: true, // FORK
-      url: '',
-      created_at: '',
-      updated_at: '',
-      pushed_at: '',
-      homepage: null,
-      size: 150,
-      stargazers_count: 1,
-      watchers_count: 1,
-      language: 'Go',
-      forks_count: 0,
-      archived: false,
-      disabled: false,
-      open_issues_count: 0,
-      license: null,
-    },
-    {
-      id: 5,
-      name: 'repo-empty-lang',
-      full_name: 'test/repo-empty-lang',
-      private: false,
-      html_url: '',
-      description: null,
-      fork: false,
-      url: '',
-      created_at: '',
-      updated_at: '',
-      pushed_at: '',
-      homepage: null,
-      size: 10,
-      stargazers_count: 0,
-      watchers_count: 0,
-      language: null, // NO LANGUAGE
-      forks_count: 0,
-      archived: false,
-      disabled: false,
-      open_issues_count: 0,
-      license: null,
-    },
-  ];
-
-  console.log('Testing calculateLanguageAnalytics...');
-
-  // Test 1: Exclude forks (default)
-  const result1 = calculateLanguageAnalytics(mockRepos, { excludeForks: true, totalPublicRepos: 5 });
-  console.assert(result1.totalAnalyzed === 4, `Expected 4 analyzed, got ${result1.totalAnalyzed}`);
-  console.assert(result1.forksExcludedCount === 1, `Expected 1 fork excluded, got ${result1.forksExcludedCount}`);
-  console.assert(result1.distinctLanguagesCount === 2, `Expected 2 languages (TS, Python), got ${result1.distinctLanguagesCount}`);
-  console.assert(result1.totalWithoutLanguage === 1, `Expected 1 without language, got ${result1.totalWithoutLanguage}`);
-  console.assert(result1.topLanguage?.language === 'TypeScript', `Expected top language TypeScript, got ${result1.topLanguage?.language}`);
-  console.assert(result1.topLanguage?.count === 2, `Expected top count 2, got ${result1.topLanguage?.count}`);
-  console.assert(result1.topLanguage?.percentage === 66.7, `Expected percentage ~66.7, got ${result1.topLanguage?.percentage}`);
-  console.assert(result1.isPartial === false, 'Expected isPartial to be false');
-
-  // Test 2: Include forks
-  const result2 = calculateLanguageAnalytics(mockRepos, { excludeForks: false, totalPublicRepos: 5 });
-  console.assert(result2.totalAnalyzed === 5, `Expected 5 analyzed, got ${result2.totalAnalyzed}`);
-  console.assert(result2.distinctLanguagesCount === 3, `Expected 3 languages with fork (TS, Python, Go), got ${result2.distinctLanguagesCount}`);
-
-  // Test 3: Partial check
-  const result3 = calculateLanguageAnalytics(mockRepos, { excludeForks: true, totalPublicRepos: 100 });
-  console.assert(result3.isPartial === true, 'Expected isPartial to be true when totalPublicRepos > repos.length');
-
-  // Test 4: Empty set
-  const result4 = calculateLanguageAnalytics([]);
-  console.assert(result4.totalAnalyzed === 0, 'Expected 0 analyzed for empty list');
-  console.assert(result4.topLanguage === null, 'Expected null top language for empty list');
-
-  console.log('All language analytics unit tests passed successfully!');
+function createRepo(overrides: Partial<GitHubRepo> & { id: number; name: string }): GitHubRepo {
+  return {
+    id: overrides.id,
+    name: overrides.name,
+    full_name: `test/${overrides.name}`,
+    private: false,
+    html_url: '',
+    description: null,
+    fork: overrides.fork ?? false,
+    url: '',
+    created_at: '',
+    updated_at: '',
+    pushed_at: '',
+    homepage: null,
+    size: 100,
+    stargazers_count: 0,
+    watchers_count: 0,
+    language: overrides.language ?? null,
+    forks_count: 0,
+    archived: false,
+    disabled: false,
+    open_issues_count: 0,
+    license: null,
+  };
 }
 
-runTests();
+const mockRepos: GitHubRepo[] = [
+  createRepo({ id: 1, name: 'repo-ts-1', language: 'TypeScript' }),
+  createRepo({ id: 2, name: 'repo-ts-2', language: 'TypeScript' }),
+  createRepo({ id: 3, name: 'repo-py', language: 'Python' }),
+  createRepo({ id: 4, name: 'repo-fork-go', language: 'Go', fork: true }),
+  createRepo({ id: 5, name: 'repo-empty-lang', language: null }),
+  createRepo({ id: 6, name: 'repo-whitespace-lang', language: '   ' }),
+];
+
+describe('calculateLanguageAnalytics', () => {
+  it('excludes forked repositories by default and counts repositories without language separately', () => {
+    const result = calculateLanguageAnalytics(mockRepos, {
+      excludeForks: true,
+      totalPublicRepos: 6,
+    });
+
+    assert.equal(result.totalAnalyzed, 5);
+    assert.equal(result.forksExcludedCount, 1);
+    assert.equal(result.totalWithLanguage, 3);
+    assert.equal(result.totalWithoutLanguage, 2);
+    assert.equal(result.distinctLanguagesCount, 2);
+    assert.equal(result.topLanguage?.language, 'TypeScript');
+    assert.equal(result.topLanguage?.count, 2);
+    assert.equal(result.topLanguage?.percentage, 66.7);
+    assert.equal(result.isPartial, false);
+  });
+
+  it('includes forked repositories when excludeForks is false', () => {
+    const result = calculateLanguageAnalytics(mockRepos, {
+      excludeForks: false,
+      totalPublicRepos: 6,
+    });
+
+    assert.equal(result.totalAnalyzed, 6);
+    assert.equal(result.forksExcludedCount, 0);
+    assert.equal(result.distinctLanguagesCount, 3);
+  });
+
+  it('flags isPartial: true when loaded repositories are fewer than totalPublicRepos', () => {
+    const result = calculateLanguageAnalytics(mockRepos, {
+      excludeForks: true,
+      totalPublicRepos: 100,
+    });
+    assert.equal(result.isPartial, true);
+    assert.equal(result.totalPublicRepos, 100);
+  });
+
+  it('breaks ties deterministically in alphabetical order when language counts are equal', () => {
+    const tiedRepos = [
+      createRepo({ id: 10, name: 'r1', language: 'Rust' }),
+      createRepo({ id: 11, name: 'r2', language: 'Go' }),
+    ];
+    const result = calculateLanguageAnalytics(tiedRepos);
+    assert.deepEqual(
+      result.breakdown.map((b) => b.language),
+      ['Go', 'Rust']
+    );
+    assert.equal(result.topLanguage?.language, 'Go');
+  });
+
+  it('handles empty repository list and fallback colors cleanly', () => {
+    const emptyResult = calculateLanguageAnalytics([]);
+    assert.equal(emptyResult.totalAnalyzed, 0);
+    assert.equal(emptyResult.topLanguage, null);
+    assert.deepEqual(emptyResult.breakdown, []);
+
+    assert.equal(getLanguageColor('TypeScript'), '#3178c6');
+    assert.ok(getLanguageColor('CustomUnknownDSL', 2).startsWith('#'));
+  });
+});

@@ -28,6 +28,12 @@ export interface CalculateActivityOptions {
  *   - 90d: 90 days prior to now, bucketed by 2-week intervals (~6-7 intervals)
  *   - 12m: 365 days prior to now, bucketed by calendar months (12 monthly buckets)
  */
+function safeParseTime(dateStr: string | null | undefined): number {
+  if (!dateStr) return 0;
+  const parsed = new Date(dateStr).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 export function calculateActivityAnalytics(
   repos: GitHubRepo[],
   options: CalculateActivityOptions = {}
@@ -52,11 +58,11 @@ export function calculateActivityAnalytics(
   const eligibleRepos: ActivityRepoItem[] = [];
 
   for (const repo of repos) {
-    const pushedTime = repo.pushed_at ? new Date(repo.pushed_at).getTime() : 0;
-    const updatedTime = repo.updated_at ? new Date(repo.updated_at).getTime() : 0;
+    const pushedTime = safeParseTime(repo.pushed_at);
+    const updatedTime = safeParseTime(repo.updated_at);
 
-    const isPushedInRange = pushedTime >= cutoffTime && pushedTime <= nowMs;
-    const isUpdatedInRange = updatedTime >= cutoffTime && updatedTime <= nowMs;
+    const isPushedInRange = pushedTime > 0 && pushedTime >= cutoffTime && pushedTime <= nowMs;
+    const isUpdatedInRange = updatedTime > 0 && updatedTime >= cutoffTime && updatedTime <= nowMs;
 
     if (isPushedInRange || isUpdatedInRange) {
       activeReposSet.add(repo.id);
@@ -75,7 +81,7 @@ export function calculateActivityAnalytics(
         language: repo.language,
         pushedAt: repo.pushed_at || repo.updated_at,
         updatedAt: repo.updated_at,
-        stargazersCount: repo.stargazers_count,
+        stargazersCount: repo.stargazers_count ?? 0,
         fork: repo.fork,
       });
     }
@@ -83,8 +89,8 @@ export function calculateActivityAnalytics(
 
   // Deterministically sort recently active repositories: latest push desc, then name asc
   eligibleRepos.sort((a, b) => {
-    const timeA = new Date(a.pushedAt).getTime();
-    const timeB = new Date(b.pushedAt).getTime();
+    const timeA = safeParseTime(a.pushedAt) || safeParseTime(a.updatedAt);
+    const timeB = safeParseTime(b.pushedAt) || safeParseTime(b.updatedAt);
     if (timeB !== timeA) {
       return timeB - timeA;
     }
@@ -134,13 +140,13 @@ function buildTimeBuckets(
       const updatedSet = new Set<number>();
 
       for (const repo of repos) {
-        const pTime = repo.pushed_at ? new Date(repo.pushed_at).getTime() : 0;
-        const uTime = repo.updated_at ? new Date(repo.updated_at).getTime() : 0;
+        const pTime = safeParseTime(repo.pushed_at);
+        const uTime = safeParseTime(repo.updated_at);
 
-        if (pTime >= startMs && pTime <= endMs) {
+        if (pTime > 0 && pTime >= startMs && pTime <= endMs) {
           pushedSet.add(repo.id);
         }
-        if (uTime >= startMs && uTime <= endMs) {
+        if (uTime > 0 && uTime >= startMs && uTime <= endMs) {
           updatedSet.add(repo.id);
         }
       }
@@ -176,13 +182,13 @@ function buildTimeBuckets(
     const updatedSet = new Set<number>();
 
     for (const repo of repos) {
-      const pTime = repo.pushed_at ? new Date(repo.pushed_at).getTime() : 0;
-      const uTime = repo.updated_at ? new Date(repo.updated_at).getTime() : 0;
+      const pTime = safeParseTime(repo.pushed_at);
+      const uTime = safeParseTime(repo.updated_at);
 
-      if (pTime >= startMs && pTime < endMs) {
+      if (pTime > 0 && pTime >= startMs && pTime < endMs) {
         pushedSet.add(repo.id);
       }
-      if (uTime >= startMs && uTime < endMs) {
+      if (uTime > 0 && uTime >= startMs && uTime < endMs) {
         updatedSet.add(repo.id);
       }
     }

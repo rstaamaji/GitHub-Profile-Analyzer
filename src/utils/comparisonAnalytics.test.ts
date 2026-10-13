@@ -1,3 +1,5 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
   buildMetricComparisonItem,
   calculateProfileComparison,
@@ -54,124 +56,92 @@ function createMockRepo(overrides: Partial<GitHubRepo> & { id: number; name: str
   };
 }
 
-function assertEqual<T>(actual: T, expected: T, message: string) {
-  const actualStr = JSON.stringify(actual);
-  const expectedStr = JSON.stringify(expected);
-  if (actualStr !== expectedStr) {
-    throw new Error(`FAIL: ${message}\n  Expected: ${expectedStr}\n  Actual:   ${actualStr}`);
-  }
-}
+describe('comparisonAnalytics utilities', () => {
+  it('validates empty and identical usernames and normalizes valid pairs', () => {
+    assert.equal(validateComparisonInputs('  ', '').isValid, false);
+    assert.equal(validateComparisonInputs('', 'torvalds').isValid, false);
+    assert.equal(validateComparisonInputs('torvalds', '   ').isValid, false);
+    assert.equal(validateComparisonInputs('@Torvalds ', 'torvalds').isValid, false);
 
-function runTests() {
-  // 1. Validate empty inputs
-  const emptyBoth = validateComparisonInputs('  ', '');
-  assertEqual(emptyBoth.isValid, false, 'Both empty inputs should be invalid');
-
-  const emptyA = validateComparisonInputs('', 'torvalds');
-  assertEqual(emptyA.isValid, false, 'Empty Developer A should be invalid');
-
-  const emptyB = validateComparisonInputs('torvalds', '   ');
-  assertEqual(emptyB.isValid, false, 'Empty Developer B should be invalid');
-
-  // 2. Validate identical usernames (case-insensitive and @ prefix)
-  const sameUser = validateComparisonInputs('@Torvalds ', 'torvalds');
-  assertEqual(sameUser.isValid, false, 'Identical usernames (case-insensitive) should be invalid');
-
-  // 3. Validate valid distinct usernames
-  const validPair = validateComparisonInputs(' @torvalds ', 'gaearon ');
-  assertEqual(validPair.isValid, true, 'Distinct usernames should be valid');
-  assertEqual(validPair.normalizedUserA, 'torvalds', 'Should strip @ and whitespace for A');
-  assertEqual(validPair.normalizedUserB, 'gaearon', 'Should strip @ and whitespace for B');
-
-  // 4. Test buildMetricComparisonItem ratios and higherSide
-  const metricItem = buildMetricComparisonItem({
-    key: 'followers',
-    label: 'Followers',
-    valueA: 250,
-    valueB: 1000,
+    const validPair = validateComparisonInputs(' @torvalds ', 'gaearon ');
+    assert.equal(validPair.isValid, true);
+    assert.equal(validPair.normalizedUserA, 'torvalds');
+    assert.equal(validPair.normalizedUserB, 'gaearon');
   });
-  assertEqual(metricItem.higherSide, 'B', 'Higher side should be B when B > A');
-  assertEqual(metricItem.ratioA, 25, 'Ratio A should be 25% of max');
-  assertEqual(metricItem.ratioB, 100, 'Ratio B should be 100% of max');
-  assertEqual(metricItem.diffFormatted, '+750', 'Diff should be +750');
 
-  // 5. Test full vs partial repository stars comparison and language overlap
-  const userA = createMockUser({
-    login: 'alice',
-    id: 1,
-    public_repos: 2, // Complete (2 loaded == 2 public_repos)
-    followers: 300,
+  it('builds metric comparison items with normalized 0-100 visual ratios and equal/zero handling', () => {
+    const metricItem = buildMetricComparisonItem({
+      key: 'followers',
+      label: 'Followers',
+      valueA: 250,
+      valueB: 1000,
+    });
+    assert.equal(metricItem.higherSide, 'B');
+    assert.equal(metricItem.ratioA, 25);
+    assert.equal(metricItem.ratioB, 100);
+    assert.equal(metricItem.diffFormatted, '+750');
+
+    const equalZeros = buildMetricComparisonItem({
+      key: 'gists',
+      label: 'Public Gists',
+      valueA: 0,
+      valueB: 0,
+    });
+    assert.equal(equalZeros.higherSide, 'equal');
+    assert.equal(equalZeros.ratioA, 0);
+    assert.equal(equalZeros.ratioB, 0);
   });
-  const reposA: GitHubRepo[] = [
-    createMockRepo({ id: 101, name: 'alice-ts', language: 'TypeScript', stargazers_count: 80 }),
-    createMockRepo({ id: 102, name: 'alice-rust', language: 'Rust', stargazers_count: 120 }),
-  ];
 
-  const userB = createMockUser({
-    login: 'bob',
-    id: 2,
-    public_repos: 150, // Partial (only 2 loaded out of 150)
-    followers: 150,
+  it('compares full vs partial repository datasets and identifies shared and unique languages', () => {
+    const userA = createMockUser({
+      login: 'alice',
+      id: 1,
+      public_repos: 2,
+      followers: 300,
+    });
+    const reposA: GitHubRepo[] = [
+      createMockRepo({ id: 101, name: 'alice-ts', language: 'TypeScript', stargazers_count: 80 }),
+      createMockRepo({ id: 102, name: 'alice-rust', language: 'Rust', stargazers_count: 120 }),
+    ];
+
+    const userB = createMockUser({
+      login: 'bob',
+      id: 2,
+      public_repos: 150, // Partial dataset (2 of 150 loaded)
+      followers: 150,
+    });
+    const reposB: GitHubRepo[] = [
+      createMockRepo({ id: 201, name: 'bob-ts', language: 'TypeScript', stargazers_count: 40 }),
+      createMockRepo({ id: 202, name: 'bob-py', language: 'Python', stargazers_count: 60 }),
+    ];
+
+    const comparison = calculateProfileComparison(
+      { user: userA, repos: reposA },
+      { user: userB, repos: reposB }
+    );
+
+    const starsMetric = comparison.metrics.find((m) => m.key === 'repo_stars');
+    assert.equal(starsMetric?.label, 'Repository Stars (Loaded Sample)');
+    assert.equal(starsMetric?.isPartialA, false);
+    assert.equal(starsMetric?.isPartialB, true);
+    assert.equal(starsMetric?.valueA, 200);
+    assert.equal(starsMetric?.valueB, 100);
+
+    assert.deepEqual(comparison.sharedLanguages, ['TypeScript']);
+    assert.deepEqual(comparison.uniqueLanguagesA, ['Rust']);
+    assert.deepEqual(comparison.uniqueLanguagesB, ['Python']);
+    assert.equal(comparison.statsA?.mostStarredRepo?.name, 'alice-rust');
+    assert.equal(comparison.statsB?.mostStarredRepo?.name, 'bob-py');
   });
-  const reposB: GitHubRepo[] = [
-    createMockRepo({ id: 201, name: 'bob-ts', language: 'TypeScript', stargazers_count: 40 }),
-    createMockRepo({ id: 202, name: 'bob-py', language: 'Python', stargazers_count: 60 }),
-  ];
 
-  const comparison = calculateProfileComparison(
-    { user: userA, repos: reposA },
-    { user: userB, repos: reposB }
-  );
+  it('handles partial comparison when one profile fails to load', () => {
+    const userA = createMockUser({ login: 'alice', id: 1, followers: 300 });
+    const reposA = [createMockRepo({ id: 101, name: 'alice-ts', language: 'TypeScript' })];
 
-  const starsMetric = comparison.metrics.find((m) => m.key === 'repo_stars');
-  assertEqual(
-    starsMetric?.label,
-    'Repository Stars (Loaded Sample)',
-    'Stars metric should be labeled as Loaded Sample when at least one profile is partial'
-  );
-  assertEqual(starsMetric?.isPartialA, false, 'Alice dataset is complete');
-  assertEqual(starsMetric?.isPartialB, true, 'Bob dataset is partial');
-  assertEqual(starsMetric?.valueA, 200, 'Alice total loaded stars should be 200');
-  assertEqual(starsMetric?.valueB, 100, 'Bob total loaded stars should be 100');
-
-  assertEqual(
-    comparison.sharedLanguages,
-    ['TypeScript'],
-    'TypeScript should be identified as shared language'
-  );
-  assertEqual(
-    comparison.uniqueLanguagesA,
-    ['Rust'],
-    'Rust should be unique to Alice'
-  );
-  assertEqual(
-    comparison.uniqueLanguagesB,
-    ['Python'],
-    'Python should be unique to Bob'
-  );
-  assertEqual(
-    comparison.statsA?.mostStarredRepo?.name,
-    'alice-rust',
-    'Alice most starred repo should be alice-rust'
-  );
-  assertEqual(
-    comparison.statsB?.mostStarredRepo?.name,
-    'bob-py',
-    'Bob most starred repo should be bob-py'
-  );
-
-  // 6. Test partial failure (when one profile is null because its API call failed)
-  const oneSideOnly = calculateProfileComparison({ user: userA, repos: reposA }, null);
-  const followersOneSide = oneSideOnly.metrics.find((m) => m.key === 'followers');
-  assertEqual(
-    followersOneSide?.higherSide,
-    'unavailable',
-    'Comparison should mark higherSide as unavailable when one profile failed to load'
-  );
-  assertEqual(followersOneSide?.formattedA, '300', 'Loaded side should still format value');
-  assertEqual(followersOneSide?.formattedB, 'N/A', 'Missing side should show N/A');
-
-  console.log('✓ All comparisonAnalytics unit tests passed!');
-}
-
-runTests();
+    const oneSideOnly = calculateProfileComparison({ user: userA, repos: reposA }, null);
+    const followersOneSide = oneSideOnly.metrics.find((m) => m.key === 'followers');
+    assert.equal(followersOneSide?.higherSide, 'unavailable');
+    assert.equal(followersOneSide?.formattedA, '300');
+    assert.equal(followersOneSide?.formattedB, 'N/A');
+  });
+});
