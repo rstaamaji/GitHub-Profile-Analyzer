@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BarChart3, FolderGit2 } from 'lucide-react';
+import { AlertTriangle, BarChart3, Clock, FolderGit2, RefreshCw } from 'lucide-react';
 import type {
   GitHubRepo,
   GitHubUser,
@@ -7,6 +7,7 @@ import type {
   ViewState,
   ApiError,
   NavigationTab,
+  CacheMeta,
 } from './types/github';
 import { githubService } from './services/githubService';
 import { Header } from './components/layout/Header';
@@ -34,6 +35,7 @@ export function App() {
   const [isLoadingMoreRepos, setIsLoadingMoreRepos] = useState<boolean>(false);
   const [repoLoadError, setRepoLoadError] = useState<ApiError | null>(null);
   const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
+  const [cacheMeta, setCacheMeta] = useState<CacheMeta | null>(null);
   const [viewState, setViewState] = useState<ViewState>('idle');
   const [activeTab, setActiveTab] = useState<NavigationTab>('overview');
   const [error, setError] = useState<ApiError | null>(null);
@@ -54,105 +56,149 @@ export function App() {
     };
   }, []);
 
-  const handleSearch = useCallback(async (username: string) => {
-    const cleanUsername = username.trim().replace(/^@/, '');
-    if (!cleanUsername) return;
+  const handleSearch = useCallback(
+    async (username: string, options?: { forceRefresh?: boolean }) => {
+      const cleanUsername = username.trim().replace(/^@/, '');
+      if (!cleanUsername) return;
 
-    // Prevent submitting the same username if already loading
-    if (viewState === 'loading' && cleanUsername.toLowerCase() === activeSearchUserRef.current.toLowerCase()) {
-      return;
-    }
+      const forceRefresh = Boolean(options?.forceRefresh);
 
-    // Cancel any previous in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    activeSearchUserRef.current = cleanUsername;
-
-    // Clear previous profile data immediately so stale data is never shown for the new username
-    setCurrentUser(null);
-    setRepos([]);
-    setSelectedRepo(null);
-    setHasMoreRepos(false);
-    setRepoLoadError(null);
-    setError(null);
-    setViewState('loading');
-    setLastSearchedUser(cleanUsername);
-    setRepoPage(1);
-
-    try {
-      // 1. Fetch user profile
-      const userRes = await githubService.getUser(cleanUsername, controller.signal);
-      if (userRes.rateLimit) {
-        setRateLimit(userRes.rateLimit);
-      }
-
-      setCurrentUser(userRes.data);
-
-      // 2. Fetch initial batch of public repos (preserve user profile even if repo fetch fails)
-      try {
-        const reposRes = await githubService.getUserRepos(
-          cleanUsername,
-          30,
-          1,
-          'pushed',
-          controller.signal
-        );
-        if (reposRes.rateLimit) {
-          setRateLimit(reposRes.rateLimit);
-        }
-
-        setRepos(reposRes.data);
-        setRepoPage(1);
-        setHasMoreRepos(
-          Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos
-        );
-      } catch (repoErr: unknown) {
-        if (
-          repoErr &&
-          typeof repoErr === 'object' &&
-          'name' in repoErr &&
-          (repoErr as { name: string }).name === 'AbortError'
-        ) {
-          return;
-        }
-        const apiRepoErr = repoErr as ApiError;
-        setRepos([]);
-        setRepoPage(0);
-        setHasMoreRepos(userRes.data.public_repos > 0);
-        setRepoLoadError({
-          message:
-            apiRepoErr.message ||
-            'Profile loaded, but initial repository list could not be retrieved.',
-          status: apiRepoErr.status,
-          resetTime: apiRepoErr.resetTime,
-        });
-      }
-
-      setViewState('success');
-      setActiveTab('overview');
-    } catch (err: unknown) {
-      // Ignore AbortError caused by new searches
-      if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+      // Prevent submitting the same username if already loading
+      if (
+        !forceRefresh &&
+        viewState === 'loading' &&
+        cleanUsername.toLowerCase() === activeSearchUserRef.current.toLowerCase()
+      ) {
         return;
       }
 
-      const apiErr = err as ApiError;
-      setError({
-        message: apiErr.message || 'Failed to retrieve profile data.',
-        status: apiErr.status,
-        resetTime: apiErr.resetTime,
-      });
-      setViewState('error');
-    } finally {
-      if (abortControllerRef.current === controller) {
-        abortControllerRef.current = null;
+      // Cancel any previous in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-    }
-  }, [viewState]);
+
+      if (forceRefresh) {
+        githubService.invalidateUserCache(cleanUsername);
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      activeSearchUserRef.current = cleanUsername;
+
+      // Clear previous profile data immediately so stale data is never shown for the new username
+      setCurrentUser(null);
+      setRepos([]);
+      setSelectedRepo(null);
+      setHasMoreRepos(false);
+      setRepoLoadError(null);
+      setCacheMeta(null);
+      setError(null);
+      setViewState('loading');
+      setLastSearchedUser(cleanUsername);
+      setRepoPage(1);
+
+      try {
+        // 1. Fetch user profile
+        const userRes = await githubService.getUser(cleanUsername, {
+          signal: controller.signal,
+          forceRefresh,
+        });
+        if (userRes.rateLimit) {
+          setRateLimit(userRes.rateLimit);
+        }
+
+        setCurrentUser(userRes.data);
+
+        // 2. Fetch initial batch of public repos (preserve user profile even if repo fetch fails)
+        try {
+          const reposRes = await githubService.getUserRepos(
+            cleanUsername,
+            30,
+            1,
+            'pushed',
+            {
+              signal: controller.signal,
+              forceRefresh,
+            }
+          );
+          if (reposRes.rateLimit) {
+            setRateLimit(reposRes.rateLimit);
+          }
+
+          setRepos(reposRes.data);
+          setRepoPage(1);
+          setHasMoreRepos(
+            Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos
+          );
+          setCacheMeta({
+            fromCache: Boolean(userRes.fromCache || reposRes.fromCache),
+            isStale: Boolean(userRes.isStale || reposRes.isStale),
+            cachedAt: userRes.cachedAt || reposRes.cachedAt || Date.now(),
+            staleReason: userRes.staleReason || reposRes.staleReason,
+          });
+        } catch (repoErr: unknown) {
+          if (
+            repoErr &&
+            typeof repoErr === 'object' &&
+            'name' in repoErr &&
+            (repoErr as { name: string }).name === 'AbortError'
+          ) {
+            return;
+          }
+          const apiRepoErr = repoErr as ApiError;
+          if (apiRepoErr.rateLimit) {
+            setRateLimit(apiRepoErr.rateLimit);
+          }
+          setRepos([]);
+          setRepoPage(0);
+          setHasMoreRepos(userRes.data.public_repos > 0);
+          setCacheMeta({
+            fromCache: Boolean(userRes.fromCache),
+            isStale: Boolean(userRes.isStale),
+            cachedAt: userRes.cachedAt || Date.now(),
+            staleReason: userRes.staleReason,
+          });
+          setRepoLoadError({
+            message:
+              apiRepoErr.message ||
+              'Profile loaded, but initial repository list could not be retrieved.',
+            status: apiRepoErr.status,
+            resetTime: apiRepoErr.resetTime,
+            isRateLimit: apiRepoErr.isRateLimit,
+            isAuthError: apiRepoErr.isAuthError,
+          });
+        }
+
+        setViewState('success');
+        if (!forceRefresh) {
+          setActiveTab('overview');
+        }
+      } catch (err: unknown) {
+        // Ignore AbortError caused by new searches
+        if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+          return;
+        }
+
+        const apiErr = err as ApiError;
+        if (apiErr.rateLimit) {
+          setRateLimit(apiErr.rateLimit);
+        }
+        setError({
+          message: apiErr.message || 'Failed to retrieve profile data.',
+          status: apiErr.status,
+          resetTime: apiErr.resetTime,
+          isRateLimit: apiErr.isRateLimit,
+          isAuthError: apiErr.isAuthError,
+        });
+        setViewState('error');
+      } finally {
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
+      }
+    },
+    [viewState]
+  );
 
   const handleLoadMoreRepos = useCallback(async () => {
     if (!currentUser || isLoadingMoreRepos || !hasMoreRepos) return;
@@ -188,11 +234,16 @@ export function App() {
       setRepoPage(nextPage);
     } catch (err: unknown) {
       const apiErr = err as ApiError;
+      if (apiErr.rateLimit) {
+        setRateLimit(apiErr.rateLimit);
+      }
       // Preserve existing loaded repositories and surface an inline error with retry
       setRepoLoadError({
         message: apiErr.message || 'Failed to load the next batch of repositories.',
         status: apiErr.status,
         resetTime: apiErr.resetTime,
+        isRateLimit: apiErr.isRateLimit,
+        isAuthError: apiErr.isAuthError,
       });
     } finally {
       setIsLoadingMoreRepos(false);
@@ -212,6 +263,7 @@ export function App() {
     setHasMoreRepos(false);
     setIsLoadingMoreRepos(false);
     setRepoLoadError(null);
+    setCacheMeta(null);
     setViewState('idle');
     setError(null);
     setLastSearchedUser('');
@@ -270,7 +322,7 @@ export function App() {
             <ErrorState
               error={error}
               searchedUsername={lastSearchedUser}
-              onRetry={lastSearchedUser ? () => handleSearch(lastSearchedUser) : undefined}
+              onRetry={lastSearchedUser ? () => handleSearch(lastSearchedUser, { forceRefresh: true }) : undefined}
               onReset={handleReset}
             />
           )}
@@ -278,6 +330,96 @@ export function App() {
           {/* Single-Profile Tab Views (Overview, Repositories, Analytics) */}
           {viewState !== 'loading' && viewState !== 'error' && (
             <>
+              {/* Cache & Stale Data Status Strip with Manual Refresh Action */}
+              {activeTab !== 'compare' && currentUser && cacheMeta && (
+                <div className="w-full max-w-5xl mx-auto mb-6">
+                  {cacheMeta.isStale ? (
+                    <div
+                      role="alert"
+                      className="p-3.5 rounded-xl bg-amber-950/35 border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-start gap-2.5 text-amber-200">
+                        <AlertTriangle
+                          className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
+                          aria-hidden="true"
+                        />
+                        <div>
+                          <span className="font-semibold text-amber-100">
+                            Showing Cached Data (May Be Outdated):{' '}
+                          </span>
+                          <span>
+                            Live GitHub API refresh failed
+                            {cacheMeta.staleReason ? ` (${cacheMeta.staleReason})` : ''}. Displaying
+                            previously cached data from{' '}
+                            <span className="font-mono text-amber-100">
+                              {new Date(cacheMeta.cachedAt).toLocaleTimeString()}
+                            </span>
+                            .
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSearch(currentUser.login, { forceRefresh: true })}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-amber-500/40 text-xs font-semibold text-amber-200 hover:text-white transition cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>Refresh Now</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="px-3.5 py-2 rounded-lg bg-[#161b22] border border-[#30363d] flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-400">
+                      <div className="flex items-center gap-2">
+                        <Clock
+                          className={`w-3.5 h-3.5 ${
+                            cacheMeta.fromCache ? 'text-sky-400' : 'text-emerald-400'
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span>
+                          {cacheMeta.fromCache ? (
+                            <>
+                              Loaded from cache for{' '}
+                              <strong className="font-mono text-neutral-200">
+                                @{currentUser.login}
+                              </strong>{' '}
+                              (cached at{' '}
+                              <span className="font-mono text-neutral-300">
+                                {new Date(cacheMeta.cachedAt).toLocaleTimeString()}
+                              </span>
+                              )
+                            </>
+                          ) : (
+                            <>
+                              Live GitHub API data for{' '}
+                              <strong className="font-mono text-neutral-200">
+                                @{currentUser.login}
+                              </strong>{' '}
+                              (updated at{' '}
+                              <span className="font-mono text-neutral-300">
+                                {new Date(cacheMeta.cachedAt).toLocaleTimeString()}
+                              </span>
+                              )
+                            </>
+                          )}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSearch(currentUser.login, { forceRefresh: true })}
+                        title="Invalidate cached responses and fetch fresh data from GitHub API"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[11px] font-medium text-neutral-200 hover:text-white transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      >
+                        <RefreshCw className="w-3 h-3" aria-hidden="true" />
+                        <span>Refresh data</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* TAB 1: OVERVIEW */}
               <div
                 role="tabpanel"
@@ -318,6 +460,7 @@ export function App() {
                     repoName={selectedRepo.name}
                     onBack={() => setSelectedRepo(null)}
                     cachedRepo={selectedRepo}
+                    onRateLimitUpdate={setRateLimit}
                   />
                 ) : currentUser ? (
                   <RepoExplorer

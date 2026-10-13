@@ -17,7 +17,7 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
-import type { GitHubRepo, ReadmeData, ApiError } from '../../types/github';
+import type { GitHubRepo, ReadmeData, ApiError, RateLimitInfo, CacheMeta } from '../../types/github';
 import { githubService } from '../../services/githubService';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 
@@ -26,6 +26,7 @@ interface RepoDetailViewProps {
   repoName: string;
   onBack: () => void;
   cachedRepo?: GitHubRepo | null;
+  onRateLimitUpdate?: (info: RateLimitInfo) => void;
 }
 
 export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
@@ -33,11 +34,14 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   repoName,
   onBack,
   cachedRepo,
+  onRateLimitUpdate,
 }) => {
   const [repo, setRepo] = useState<GitHubRepo | null>(cachedRepo || null);
   const [readme, setReadme] = useState<ReadmeData | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState<boolean>(!cachedRepo);
   const [isLoadingReadme, setIsLoadingReadme] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [cacheMeta, setCacheMeta] = useState<CacheMeta | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -50,29 +54,64 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // 1. Fetch Repository Details if not already cached or to refresh
-    const fetchRepo = async () => {
+    // 1. Only fetch Repository Details from API if not already provided via cachedRepo
+    const fetchRepoIfNeeded = async () => {
+      if (cachedRepo && cachedRepo.name.toLowerCase() === repoName.toLowerCase()) {
+        setRepo(cachedRepo);
+        setIsLoadingRepo(false);
+        return;
+      }
 
+      setIsLoadingRepo(true);
       try {
-        const repoRes = await githubService.getRepoDetail(owner, repoName, controller.signal);
+        const repoRes = await githubService.getRepoDetail(owner, repoName, {
+          signal: controller.signal,
+        });
+        if (repoRes.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(repoRes.rateLimit);
+        }
         setRepo(repoRes.data);
+        if (repoRes.isStale) {
+          setCacheMeta({
+            fromCache: Boolean(repoRes.fromCache),
+            isStale: Boolean(repoRes.isStale),
+            cachedAt: repoRes.cachedAt || Date.now(),
+            staleReason: repoRes.staleReason,
+          });
+        }
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
           return;
         }
         const apiErr = err as ApiError;
+        if (apiErr.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(apiErr.rateLimit);
+        }
         setError(apiErr);
       } finally {
         setIsLoadingRepo(false);
       }
     };
 
-    // 2. Fetch README Content
+    // 2. Fetch README Content (cached by githubService for 10 minutes)
     const fetchReadme = async () => {
       setIsLoadingReadme(true);
       try {
-        const readmeRes = await githubService.getRepoReadme(owner, repoName, controller.signal);
+        const readmeRes = await githubService.getRepoReadme(owner, repoName, {
+          signal: controller.signal,
+        });
+        if (readmeRes.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(readmeRes.rateLimit);
+        }
         setReadme(readmeRes.data);
+        if (readmeRes.isStale) {
+          setCacheMeta({
+            fromCache: Boolean(readmeRes.fromCache),
+            isStale: Boolean(readmeRes.isStale),
+            cachedAt: readmeRes.cachedAt || Date.now(),
+            staleReason: readmeRes.staleReason,
+          });
+        }
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
           return;
@@ -84,37 +123,72 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
       }
     };
 
-    fetchRepo();
-    fetchReadme();
+    void fetchRepoIfNeeded();
+    void fetchReadme();
 
     return () => {
       controller.abort();
     };
-  }, [owner, repoName]);
+  }, [cachedRepo, onRateLimitUpdate, owner, repoName]);
 
-  const handleRetry = () => {
-    if (isLoadingRepo) return;
+  const handleRetry = (forceRefresh = true) => {
+    if (isLoadingRepo || isRefreshing) return;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setIsLoadingRepo(true);
+    if (!repo) {
+      setIsLoadingRepo(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setIsLoadingReadme(true);
     setError(null);
-    githubService.getRepoDetail(owner, repoName, controller.signal)
-      .then((res) => setRepo(res.data))
+    setCacheMeta(null);
+
+    githubService
+      .getRepoDetail(owner, repoName, { signal: controller.signal, forceRefresh })
+      .then((res) => {
+        if (res.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(res.rateLimit);
+        }
+        setRepo(res.data);
+        if (res.isStale) {
+          setCacheMeta({
+            fromCache: Boolean(res.fromCache),
+            isStale: Boolean(res.isStale),
+            cachedAt: res.cachedAt || Date.now(),
+            staleReason: res.staleReason,
+          });
+        }
+      })
       .catch((err) => {
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
           return;
         }
-        setError(err as ApiError);
+        const apiErr = err as ApiError;
+        if (apiErr.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(apiErr.rateLimit);
+        }
+        if (!repo) {
+          setError(apiErr);
+        }
       })
-      .finally(() => setIsLoadingRepo(false));
+      .finally(() => {
+        setIsLoadingRepo(false);
+        setIsRefreshing(false);
+      });
 
-    githubService.getRepoReadme(owner, repoName, controller.signal)
-      .then((res) => setReadme(res.data))
+    githubService
+      .getRepoReadme(owner, repoName, { signal: controller.signal, forceRefresh })
+      .then((res) => {
+        if (res.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(res.rateLimit);
+        }
+        setReadme(res.data);
+      })
       .catch(() => setReadme(null))
       .finally(() => setIsLoadingReadme(false));
   };
@@ -142,7 +216,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
             <span>Back to Repositories</span>
           </button>
           <button
-            onClick={handleRetry}
+            onClick={() => handleRetry(true)}
             disabled={isLoadingRepo}
             type="button"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
@@ -190,7 +264,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-200">
       {/* Top Breadcrumb & Return Action */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           onClick={onBack}
           type="button"
@@ -201,16 +275,46 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
           <span>Back to Repositories</span>
         </button>
 
-        <a
-          href={repo.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition"
-        >
-          <span>View on GitHub</span>
-          <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
-        </a>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleRetry(true)}
+            disabled={isRefreshing || isLoadingReadme}
+            type="button"
+            title="Refresh repository metadata and README from GitHub API"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : 'text-neutral-400'}`}
+              aria-hidden="true"
+            />
+            <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
+
+          <a
+            href={repo.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition"
+          >
+            <span>View on GitHub</span>
+            <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
+          </a>
+        </div>
       </div>
+
+      {/* Stale Cache Fallback Notice */}
+      {cacheMeta?.isStale && (
+        <div
+          role="alert"
+          className="p-3.5 rounded-xl bg-amber-950/35 border border-amber-500/40 flex items-center justify-between gap-3 text-xs text-amber-200"
+        >
+          <span>
+            <strong className="text-amber-100">Showing Cached Repository Data:</strong> Latest GitHub
+            API request failed{cacheMeta.staleReason ? ` (${cacheMeta.staleReason})` : ''}. Displaying
+            cached data from {new Date(cacheMeta.cachedAt).toLocaleTimeString()}.
+          </span>
+        </div>
+      )}
 
       {/* Main Repository Header Card */}
       <section

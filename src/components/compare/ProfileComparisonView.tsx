@@ -32,13 +32,6 @@ interface ProfileComparisonViewProps {
   onRateLimitUpdate?: (info: RateLimitInfo) => void;
 }
 
-interface CachedProfileEntry {
-  user: GitHubUser;
-  repos: GitHubRepo[];
-  page: number;
-  hasMoreRepos: boolean;
-}
-
 const EXAMPLE_PAIRS: Array<{ label: string; userA: string; userB: string; note: string }> = [
   {
     label: 'torvalds vs gvanrossum',
@@ -90,9 +83,6 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
   const requestTokenARef = useRef<number>(0);
   const requestTokenBRef = useRef<number>(0);
 
-  // Session cache by lowercase username to avoid redundant API requests
-  const cacheRef = useRef<Map<string, CachedProfileEntry>>(new Map());
-
   // Cleanup in-flight requests on unmount
   useEffect(() => {
     const refA = abortControllerARef;
@@ -104,8 +94,9 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
   }, []);
 
   /**
-   * Fetches a single profile slot (A or B), utilizing session cache when valid
-   * and clearing previous slot data immediately so stale profiles are never shown.
+   * Fetches a single profile slot (A or B), utilizing the centralized githubService cache
+   * (with TTL + stale fallback) and clearing previous slot data immediately so stale profiles
+   * from a different username are never shown.
    */
   const fetchSlotProfile = useCallback(
     async (
@@ -114,7 +105,8 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
       options: { bypassCache?: boolean } = {}
     ): Promise<void> => {
       const cleanUsername = rawUsername.trim().replace(/^@/, '');
-      const cacheKey = cleanUsername.toLowerCase();
+      const normalizedKey = cleanUsername.toLowerCase();
+      const forceRefresh = Boolean(options.bypassCache);
       const setSlot = side === 'A' ? setSlotA : setSlotB;
       const abortRef = side === 'A' ? abortControllerARef : abortControllerBRef;
       const tokenRef = side === 'A' ? requestTokenARef : requestTokenBRef;
@@ -127,39 +119,34 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
 
       const currentToken = ++tokenRef.current;
 
-      // 1. Check if the currently active main-app profile already has complete data
+      if (forceRefresh) {
+        githubService.invalidateUserCache(cleanUsername);
+      }
+
+      // 1. Reuse the currently active main-app profile if it already has all public repos loaded
       if (
-        !options.bypassCache &&
+        !forceRefresh &&
         activeUser &&
-        activeUser.login.toLowerCase() === cacheKey &&
+        activeUser.login.toLowerCase() === normalizedKey &&
         activeRepos.length >= activeUser.public_repos
       ) {
-        const entry: CachedProfileEntry = {
+        setSlot({
+          username: activeUser.login,
+          status: 'success',
           user: activeUser,
           repos: activeRepos,
           page: 1,
           hasMoreRepos: false,
-        };
-        cacheRef.current.set(cacheKey, entry);
-      }
-
-      // 2. Return cached profile immediately if available and not bypassing cache
-      const cached = !options.bypassCache ? cacheRef.current.get(cacheKey) : undefined;
-      if (cached) {
-        setSlot({
-          username: cached.user.login,
-          status: 'success',
-          user: cached.user,
-          repos: cached.repos,
-          page: cached.page,
-          hasMoreRepos: cached.hasMoreRepos,
           isLoadingMore: false,
           error: null,
+          fromCache: true,
+          isStale: false,
+          cachedAt: Date.now(),
         });
         return;
       }
 
-      // 3. Clear old profile data immediately and enter loading state
+      // 2. Clear old profile data immediately and enter loading state
       const controller = new AbortController();
       abortRef.current = controller;
 
@@ -175,7 +162,10 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
       });
 
       try {
-        const userRes = await githubService.getUser(cleanUsername, controller.signal);
+        const userRes = await githubService.getUser(cleanUsername, {
+          signal: controller.signal,
+          forceRefresh,
+        });
         if (userRes.rateLimit && onRateLimitUpdate) {
           onRateLimitUpdate(userRes.rateLimit);
         }
@@ -186,7 +176,10 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
           100,
           1,
           'pushed',
-          controller.signal
+          {
+            signal: controller.signal,
+            forceRefresh,
+          }
         );
         if (reposRes.rateLimit && onRateLimitUpdate) {
           onRateLimitUpdate(reposRes.rateLimit);
@@ -198,15 +191,6 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
         const hasMore =
           Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos;
 
-        const entry: CachedProfileEntry = {
-          user: userRes.data,
-          repos: reposRes.data,
-          page: 1,
-          hasMoreRepos: hasMore,
-        };
-        cacheRef.current.set(cacheKey, entry);
-        cacheRef.current.set(userRes.data.login.toLowerCase(), entry);
-
         setSlot({
           username: userRes.data.login,
           status: 'success',
@@ -216,6 +200,10 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
           hasMoreRepos: hasMore,
           isLoadingMore: false,
           error: null,
+          fromCache: Boolean(userRes.fromCache || reposRes.fromCache),
+          isStale: Boolean(userRes.isStale || reposRes.isStale),
+          cachedAt: userRes.cachedAt || reposRes.cachedAt || Date.now(),
+          staleReason: userRes.staleReason || reposRes.staleReason,
         });
       } catch (err: unknown) {
         if (
@@ -229,6 +217,9 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
         if (tokenRef.current !== currentToken) return;
 
         const apiErr = err as ApiError;
+        if (apiErr.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(apiErr.rateLimit);
+        }
         setSlot({
           username: cleanUsername,
           status: 'error',
@@ -241,6 +232,8 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
             message: apiErr.message || `Failed to retrieve data for @${cleanUsername}.`,
             status: apiErr.status,
             resetTime: apiErr.resetTime,
+            isRateLimit: apiErr.isRateLimit,
+            isAuthError: apiErr.isAuthError,
           },
         });
       } finally {
@@ -287,20 +280,15 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
           const stillHasMore =
             Boolean(res.hasNextPage) || (res.data.length === 100 && remaining > 0);
 
-          const updatedEntry: CachedProfileEntry = {
-            user: prev.user,
-            repos: combined,
-            page: nextPage,
-            hasMoreRepos: stillHasMore,
-          };
-          cacheRef.current.set(login.toLowerCase(), updatedEntry);
-
           return {
             ...prev,
             repos: combined,
             page: nextPage,
             hasMoreRepos: stillHasMore,
             isLoadingMore: false,
+            fromCache: Boolean(prev.fromCache || res.fromCache),
+            isStale: Boolean(prev.isStale || res.isStale),
+            staleReason: prev.staleReason || res.staleReason,
           };
         });
       } catch {

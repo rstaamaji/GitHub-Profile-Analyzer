@@ -15,7 +15,10 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   onRetry,
   onReset,
 }) => {
-  const isRateLimit = error?.status === 403 || error?.status === 429;
+  const isAuthError = Boolean(error?.isAuthError) || error?.status === 401;
+  const isRateLimit =
+    Boolean(error?.isRateLimit) ||
+    (!isAuthError && (error?.status === 403 || error?.status === 429));
   const isNotFound = error?.status === 404;
   const isNetworkError = !error?.status;
 
@@ -23,9 +26,11 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     ? 'GitHub User Not Found'
     : isRateLimit
       ? 'GitHub API Rate Limit Reached'
-      : isNetworkError
-        ? 'Network Connection Issue'
-        : 'Unable to Retrieve Profile';
+      : isAuthError
+        ? 'GitHub Access Restricted'
+        : isNetworkError
+          ? 'Network Connection Issue'
+          : 'Unable to Retrieve Profile';
 
   return (
     <div
@@ -60,8 +65,10 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           {isNotFound
             ? 'Double-check the username spelling, or select a featured developer after returning to the home view.'
             : isRateLimit
-              ? 'Wait until the hourly quota resets or configure a VITE_GITHUB_TOKEN environment variable for 5,000 requests/hour.'
-              : 'Verify your internet connection and click Try Again to repeat the request.'}
+              ? 'Public GitHub API allows 60 unauthenticated requests per hour. Previously visited profiles remain accessible from session cache until the quota resets.'
+              : isAuthError
+                ? 'This resource requires elevated permissions or has been restricted by GitHub.'
+                : 'Verify your internet connection and click Try Again to repeat the request.'}
         </p>
       </div>
 

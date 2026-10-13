@@ -180,6 +180,21 @@ export interface ApiError {
   status?: number;
   resetTime?: Date;
   documentation_url?: string;
+  isRateLimit?: boolean;
+  isAuthError?: boolean;
+  rateLimit?: RateLimitInfo;
+}
+
+export interface CacheMeta {
+  fromCache: boolean;
+  isStale: boolean;
+  cachedAt: number;
+  staleReason?: string;
+}
+
+export interface ServiceRequestOptions {
+  signal?: AbortSignal;
+  forceRefresh?: boolean;
 }
 
 export interface ComparisonInputValidation {
@@ -198,6 +213,10 @@ export interface ComparedProfileSlot {
   hasMoreRepos: boolean;
   isLoadingMore: boolean;
   error: ApiError | null;
+  fromCache?: boolean;
+  isStale?: boolean;
+  cachedAt?: number;
+  staleReason?: string;
 }
 
 export interface MetricComparisonItem {
