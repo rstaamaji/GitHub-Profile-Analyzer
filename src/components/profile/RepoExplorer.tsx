@@ -8,8 +8,11 @@ import {
   Loader2,
   ChevronDown,
   Info,
+  Star,
+  FolderGit2,
 } from 'lucide-react';
-import type { GitHubRepo, RepoSortOption } from '../../types/github';
+import type { GitHubRepo, RepoFilterType, RepoSortOption } from '../../types/github';
+import { extractAvailableLanguages, filterAndSortRepos } from '../../utils/repoFilterSort';
 import { RepoCard } from './RepoCard';
 
 interface RepoExplorerProps {
@@ -22,6 +25,16 @@ interface RepoExplorerProps {
   onSelectRepo?: (repo: GitHubRepo) => void;
 }
 
+const MIN_STAR_OPTIONS: Array<{ label: string; value: number }> = [
+  { label: 'All Stars', value: 0 },
+  { label: '★ 1+', value: 1 },
+  { label: '★ 10+', value: 10 },
+  { label: '★ 50+', value: 50 },
+  { label: '★ 100+', value: 100 },
+  { label: '★ 500+', value: 500 },
+  { label: '★ 1,000+', value: 1000 },
+];
+
 export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   repos,
   totalPublicRepos,
@@ -31,73 +44,56 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   onLoadMore,
   onSelectRepo,
 }) => {
-
+  const [prevUsername, setPrevUsername] = useState(username);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
+  const [filterType, setFilterType] = useState<RepoFilterType>('all');
+  const [minStars, setMinStars] = useState<number>(0);
   const [sortBy, setSortBy] = useState<RepoSortOption>('pushed');
-  const [filterType, setFilterType] = useState<'all' | 'sources' | 'forks' | 'archived'>('all');
+
+  // Reset filters cleanly if the active profile changes
+  if (prevUsername !== username) {
+    setPrevUsername(username);
+    setSearchQuery('');
+    setSelectedLanguage('all');
+    setFilterType('all');
+    setMinStars(0);
+    setSortBy('pushed');
+  }
 
   // Dynamically compute languages present in the fetched dataset
-  const availableLanguages = useMemo(() => {
-    const langCounts: Record<string, number> = {};
-    for (const repo of repos) {
-      if (repo.language) {
-        langCounts[repo.language] = (langCounts[repo.language] || 0) + 1;
-      }
-    }
-    return Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
-  }, [repos]);
+  const availableLanguages = useMemo(() => extractAvailableLanguages(repos), [repos]);
 
   // Client-side filtering and sorting across the loaded repository set
-  const filteredAndSortedRepos = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+  const filteredAndSortedRepos = useMemo(
+    () =>
+      filterAndSortRepos(repos, {
+        searchQuery,
+        language: selectedLanguage,
+        type: filterType,
+        minStars,
+        sortBy,
+      }),
+    [repos, searchQuery, selectedLanguage, filterType, minStars, sortBy]
+  );
 
-    return repos
-      .filter((repo) => {
-        // 1. Text filter (name & description)
-        if (query) {
-          const matchName = repo.name.toLowerCase().includes(query);
-          const matchDesc = repo.description?.toLowerCase().includes(query) ?? false;
-          if (!matchName && !matchDesc) return false;
-        }
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    selectedLanguage !== 'all' ||
+    filterType !== 'all' ||
+    minStars > 0;
 
-        // 2. Language filter
-        if (selectedLanguage !== 'all' && repo.language !== selectedLanguage) {
-          return false;
-        }
-
-        // 3. Type filter
-        if (filterType === 'sources' && repo.fork) return false;
-        if (filterType === 'forks' && !repo.fork) return false;
-        if (filterType === 'archived' && !repo.archived) return false;
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'stars') {
-          return b.stargazers_count - a.stargazers_count;
-        }
-        if (sortBy === 'forks') {
-          return b.forks_count - a.forks_count;
-        }
-        if (sortBy === 'name') {
-          return a.name.localeCompare(b.name);
-        }
-        // Default: pushed_at (recency)
-        const dateA = new Date(a.pushed_at || a.updated_at).getTime();
-        const dateB = new Date(b.pushed_at || b.updated_at).getTime();
-        return dateB - dateA;
-      });
-  }, [repos, searchQuery, selectedLanguage, sortBy, filterType]);
-
-  const hasActiveFilters = searchQuery !== '' || selectedLanguage !== 'all' || filterType !== 'all';
+  const isDefaultSort = sortBy === 'pushed';
 
   const resetFilters = () => {
     setSearchQuery('');
     setSelectedLanguage('all');
     setFilterType('all');
+    setMinStars(0);
     setSortBy('pushed');
   };
+
+  const isPartialDataset = repos.length < totalPublicRepos;
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
@@ -109,216 +105,291 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
             <span className="font-mono text-emerald-400">@{username}</span>
           </h2>
           <p className="text-xs text-neutral-400 mt-1">
-            Displaying <span className="font-mono text-neutral-200 font-semibold">{filteredAndSortedRepos.length}</span>{' '}
-            of <span className="font-mono text-neutral-200 font-semibold">{repos.length}</span> loaded repositories{' '}
-            (account has <span className="font-mono text-neutral-200 font-semibold">{totalPublicRepos}</span> total public)
+            Showing{' '}
+            <span className="font-mono text-neutral-200 font-semibold">
+              {filteredAndSortedRepos.length}
+            </span>{' '}
+            matching of{' '}
+            <span className="font-mono text-neutral-200 font-semibold">{repos.length}</span> loaded
+            repositories (account has{' '}
+            <span className="font-mono text-neutral-200 font-semibold">{totalPublicRepos}</span>{' '}
+            total public)
           </p>
         </div>
 
-        {/* Scope Note Pill */}
+        {/* Scope & Pagination Note Pill */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] border border-[#30363d] text-xs text-neutral-400 self-start sm:self-auto">
-          <Info className="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" />
-          <span>Filters apply to all loaded repositories</span>
-        </div>
-      </div>
-
-      {/* Filter and Control Bar */}
-      <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-3.5 shadow-sm">
-        {/* Top Search Input */}
-        <div className="relative">
-          <label htmlFor="repo-filter-search" className="sr-only">
-            Filter repositories by name or description
-          </label>
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
-            <Search className="w-4 h-4" aria-hidden="true" />
-          </div>
-          <input
-            id="repo-filter-search"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter repositories by name or description..."
-            className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-500 pl-10 pr-10 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-emerald-500 text-sm transition"
+          <Info
+            className={`w-3.5 h-3.5 shrink-0 ${isPartialDataset ? 'text-amber-400' : 'text-blue-400'}`}
+            aria-hidden="true"
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              type="button"
-              aria-label="Clear filter search query"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-200 rounded cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Filter Controls Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Language Dropdown */}
-            <div className="relative">
-              <label htmlFor="repo-language-select" className="sr-only">
-                Filter by programming language
-              </label>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                <span className="text-neutral-500">Language:</span>
-                <select
-                  id="repo-language-select"
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
-                >
-                  <option value="all" className="bg-[#161b22] text-neutral-200">
-                    All ({repos.length})
-                  </option>
-                  {availableLanguages.map(([lang, count]) => (
-                    <option key={lang} value={lang} className="bg-[#161b22] text-neutral-200">
-                      {lang} ({count})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Type Filter Dropdown */}
-            <div className="relative">
-              <label htmlFor="repo-type-select" className="sr-only">
-                Filter by repository type
-              </label>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
-                <Filter className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                <span className="text-neutral-500">Type:</span>
-                <select
-                  id="repo-type-select"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-                  className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
-                >
-                  <option value="all" className="bg-[#161b22] text-neutral-200">
-                    All Sources
-                  </option>
-                  <option value="sources" className="bg-[#161b22] text-neutral-200">
-                    Original Sources Only
-                  </option>
-                  <option value="forks" className="bg-[#161b22] text-neutral-200">
-                    Forks Only
-                  </option>
-                  <option value="archived" className="bg-[#161b22] text-neutral-200">
-                    Archived Only
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            {/* Clear All Filters Button */}
-            {hasActiveFilters && (
-              <button
-                onClick={resetFilters}
-                type="button"
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] transition cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Reset filters</span>
-              </button>
-            )}
-          </div>
-
-          {/* Sort By Dropdown */}
-          <div className="relative ml-auto">
-            <label htmlFor="repo-sort-select" className="sr-only">
-              Sort repositories
-            </label>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
-              <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-              <span className="text-neutral-500">Sort:</span>
-              <select
-                id="repo-sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as RepoSortOption)}
-                className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium"
-              >
-                <option value="pushed" className="bg-[#161b22] text-neutral-200">
-                  Recently Updated
-                </option>
-                <option value="stars" className="bg-[#161b22] text-neutral-200">
-                  Most Stars
-                </option>
-                <option value="forks" className="bg-[#161b22] text-neutral-200">
-                  Most Forks
-                </option>
-                <option value="name" className="bg-[#161b22] text-neutral-200">
-                  Name (A-Z)
-                </option>
-              </select>
-            </div>
-          </div>
+          <span>
+            {isPartialDataset
+              ? `Filtering ${repos.length} of ${totalPublicRepos} loaded repos (load more below for full coverage)`
+              : 'Filters & sorting apply to all public repositories'}
+          </span>
         </div>
       </div>
 
-      {/* Repositories Cards Grid */}
-      {filteredAndSortedRepos.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredAndSortedRepos.map((repo) => (
-            <RepoCard key={repo.id} repo={repo} onSelectRepo={onSelectRepo} />
-          ))}
+      {/* Empty Profile State (0 public repositories on account) */}
+      {repos.length === 0 ? (
+        <div className="p-12 text-center rounded-xl bg-[#161b22] border border-[#30363d] space-y-3">
+          <div className="w-11 h-11 mx-auto rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-neutral-400">
+            <FolderGit2 className="w-5 h-5 text-neutral-400" aria-hidden="true" />
+          </div>
+          <h3 className="text-base font-semibold text-neutral-200">
+            No public repositories available
+          </h3>
+          <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
+            The GitHub profile <span className="font-mono text-neutral-300">@{username}</span> does
+            not have any public repositories to display or filter.
+          </p>
         </div>
       ) : (
+        <>
+          {/* Filter and Control Bar */}
+          <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-3.5 shadow-sm">
+            {/* Top Search Input */}
+            <div className="relative">
+              <label htmlFor="repo-filter-search" className="sr-only">
+                Search repositories by name or description
+              </label>
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+                <Search className="w-4 h-4" aria-hidden="true" />
+              </div>
+              <input
+                id="repo-filter-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search repositories by name or description..."
+                className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-500 pl-10 pr-10 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-emerald-500 text-sm transition"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  type="button"
+                  aria-label="Clear repository search query"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-200 rounded cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
 
-        /* Empty Filter Results State */
-        <div className="p-10 text-center rounded-xl bg-[#161b22] border border-[#30363d] space-y-3">
-          <div className="w-10 h-10 mx-auto rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-neutral-400">
-            <Filter className="w-5 h-5 text-neutral-400" aria-hidden="true" />
+            {/* Filter Controls Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Language Dropdown */}
+                <div className="relative">
+                  <label htmlFor="repo-language-select" className="sr-only">
+                    Filter by primary programming language
+                  </label>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                    <span className="text-neutral-500">Language:</span>
+                    <select
+                      id="repo-language-select"
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                    >
+                      <option value="all" className="bg-[#161b22] text-neutral-200">
+                        All Languages ({repos.length})
+                      </option>
+                      {availableLanguages.map(([lang, count]) => (
+                        <option key={lang} value={lang} className="bg-[#161b22] text-neutral-200">
+                          {lang} ({count})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Type Filter Dropdown */}
+                <div className="relative">
+                  <label htmlFor="repo-type-select" className="sr-only">
+                    Filter by repository type
+                  </label>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
+                    <Filter className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                    <span className="text-neutral-500">Type:</span>
+                    <select
+                      id="repo-type-select"
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value as RepoFilterType)}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                    >
+                      <option value="all" className="bg-[#161b22] text-neutral-200">
+                        All Types
+                      </option>
+                      <option value="sources" className="bg-[#161b22] text-neutral-200">
+                        Original Only
+                      </option>
+                      <option value="forks" className="bg-[#161b22] text-neutral-200">
+                        Forks Only
+                      </option>
+                      <option value="archived" className="bg-[#161b22] text-neutral-200">
+                        Archived Only
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Minimum Stars Filter Dropdown */}
+                <div className="relative">
+                  <label htmlFor="repo-min-stars-select" className="sr-only">
+                    Filter by minimum stars
+                  </label>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
+                    <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+                    <span className="text-neutral-500">Stars:</span>
+                    <select
+                      id="repo-min-stars-select"
+                      value={minStars}
+                      onChange={(e) => setMinStars(Number(e.target.value))}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                    >
+                      {MIN_STAR_OPTIONS.map((opt) => (
+                        <option
+                          key={opt.value}
+                          value={opt.value}
+                          className="bg-[#161b22] text-neutral-200"
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Clear All Filters Button */}
+                {(hasActiveFilters || !isDefaultSort) && (
+                  <button
+                    onClick={resetFilters}
+                    type="button"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] border border-transparent hover:border-[#30363d] transition cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Reset filters</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div className="relative ml-auto">
+                <label htmlFor="repo-sort-select" className="sr-only">
+                  Sort repositories
+                </label>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-xs text-neutral-300">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                  <span className="text-neutral-500">Sort:</span>
+                  <select
+                    id="repo-sort-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as RepoSortOption)}
+                    className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium"
+                  >
+                    <option value="pushed" className="bg-[#161b22] text-neutral-200">
+                      Last Updated (Newest)
+                    </option>
+                    <option value="pushed_asc" className="bg-[#161b22] text-neutral-200">
+                      Last Updated (Oldest)
+                    </option>
+                    <option value="stars" className="bg-[#161b22] text-neutral-200">
+                      Most Stars
+                    </option>
+                    <option value="forks" className="bg-[#161b22] text-neutral-200">
+                      Most Forks
+                    </option>
+                    <option value="name" className="bg-[#161b22] text-neutral-200">
+                      Name (A–Z)
+                    </option>
+                    <option value="name_desc" className="bg-[#161b22] text-neutral-200">
+                      Name (Z–A)
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 className="text-base font-semibold text-neutral-200">No matching repositories found</h3>
-          <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
-            No loaded repositories matched your current filter query. Try clearing search keywords or selecting a different programming language.
-          </p>
-          <button
-            onClick={resetFilters}
-            type="button"
-            className="inline-flex items-center gap-1.5 px-4 py-2 mt-2 bg-[#21262d] hover:bg-[#30363d] text-xs font-semibold text-neutral-200 rounded-lg border border-[#30363d] transition cursor-pointer"
-          >
-            <span>Clear all filters</span>
-          </button>
-        </div>
-      )}
 
-      {/* Incremental Load More Control */}
-      {hasMore && (
-        <div className="pt-4 text-center">
-          <button
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            type="button"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
-          >
-            {isLoadingMore ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" aria-hidden="true" />
-                <span>Loading more repositories...</span>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4 text-neutral-400" aria-hidden="true" />
-                <span>
-                  Load more repositories ({repos.length} of {totalPublicRepos} loaded)
-                </span>
-              </>
-            )}
-          </button>
-          <div className="text-[11px] text-neutral-500 mt-2 font-mono">
-            Fetches next 30 repositories via GitHub REST API pagination
-          </div>
-        </div>
-      )}
+          {/* Repositories Cards Grid or Filter Empty State */}
+          {filteredAndSortedRepos.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredAndSortedRepos.map((repo) => (
+                <RepoCard key={repo.id} repo={repo} onSelectRepo={onSelectRepo} />
+              ))}
+            </div>
+          ) : (
+            /* Empty Filter Results State (Account has repos, but 0 match active filters) */
+            <div className="p-10 text-center rounded-xl bg-[#161b22] border border-[#30363d] space-y-3">
+              <div className="w-10 h-10 mx-auto rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-neutral-400">
+                <Filter className="w-5 h-5 text-neutral-400" aria-hidden="true" />
+              </div>
+              <h3 className="text-base font-semibold text-neutral-200">
+                No matching repositories found
+              </h3>
+              <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
+                None of the <span className="font-mono text-neutral-300">{repos.length}</span>{' '}
+                loaded repositories matched your current search or filter combination.
+                {isPartialDataset &&
+                  ` Note: ${totalPublicRepos - repos.length} additional public repositories have not been loaded yet.`}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <button
+                  onClick={resetFilters}
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-xs font-semibold text-neutral-200 rounded-lg border border-[#30363d] transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Reset all filters</span>
+                </button>
+              </div>
+            </div>
+          )}
 
-      {/* All Repositories Loaded Indicator */}
-      {!hasMore && repos.length > 0 && repos.length >= totalPublicRepos && (
-        <div className="text-center py-4 text-xs text-neutral-500 font-mono">
-          ✓ All {repos.length} public repositories loaded
-        </div>
+          {/* Incremental Load More Control */}
+          {hasMore && (
+            <div className="pt-4 text-center">
+              <button
+                onClick={onLoadMore}
+                disabled={isLoadingMore}
+                type="button"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2
+                      className="w-4 h-4 animate-spin text-emerald-400"
+                      aria-hidden="true"
+                    />
+                    <span>Loading more repositories...</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4 text-neutral-400" aria-hidden="true" />
+                    <span>
+                      Load more repositories ({repos.length} of {totalPublicRepos} loaded)
+                    </span>
+                  </>
+                )}
+              </button>
+              <div className="text-[11px] text-neutral-500 mt-2 font-mono">
+                Fetches next 30 repositories via GitHub REST API pagination
+              </div>
+            </div>
+          )}
+
+          {/* All Repositories Loaded Indicator */}
+          {!hasMore && repos.length > 0 && repos.length >= totalPublicRepos && (
+            <div className="text-center py-4 text-xs text-neutral-500 font-mono">
+              ✓ All {repos.length} public repositories loaded
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 };
+

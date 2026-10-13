@@ -157,7 +157,23 @@ export type ViewState = 'idle' | 'loading' | 'success' | 'error';
 
 export type NavigationTab = 'overview' | 'repositories' | 'analytics' | 'compare';
 
-export type RepoSortOption = 'pushed' | 'stars' | 'name' | 'forks';
+export type RepoSortOption =
+  | 'pushed'
+  | 'pushed_asc'
+  | 'stars'
+  | 'forks'
+  | 'name'
+  | 'name_desc';
+
+export type RepoFilterType = 'all' | 'sources' | 'forks' | 'archived';
+
+export interface RepoFilterOptions {
+  searchQuery?: string;
+  language?: string;
+  type?: RepoFilterType;
+  minStars?: number;
+  sortBy?: RepoSortOption;
+}
 
 export interface ApiError {
   message: string;
