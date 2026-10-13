@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BarChart3, GitCompare, FolderGit2 } from 'lucide-react';
+import { BarChart3, FolderGit2 } from 'lucide-react';
 import type {
   GitHubRepo,
   GitHubUser,
@@ -21,6 +21,7 @@ import { ProfileOverview } from './components/profile/ProfileOverview';
 import { RepoExplorer } from './components/profile/RepoExplorer';
 import { RepoDetailView } from './components/profile/RepoDetailView';
 import { AnalyticsContainer } from './components/analytics/AnalyticsContainer';
+import { ProfileComparisonView } from './components/compare/ProfileComparisonView';
 
 
 
@@ -199,33 +200,35 @@ export function App() {
 
       {/* 3. Main content shell */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 md:py-10 flex flex-col">
-        {/* Search header container */}
-        <section aria-label="Profile Search" className="mb-8 text-center">
-          <SearchBar
-            onSearch={handleSearch}
-            isLoading={viewState === 'loading'}
-            initialValue={lastSearchedUser}
-            hasActiveData={Boolean(currentUser)}
-            onClear={handleReset}
-          />
-        </section>
+        {/* Single-Profile Search header container (shown on Overview, Repositories, and Analytics tabs) */}
+        {activeTab !== 'compare' && (
+          <section aria-label="Profile Search" className="mb-8 text-center">
+            <SearchBar
+              onSearch={handleSearch}
+              isLoading={viewState === 'loading'}
+              initialValue={lastSearchedUser}
+              hasActiveData={Boolean(currentUser)}
+              onClear={handleReset}
+            />
+          </section>
+        )}
 
         {/* Dynamic content area */}
         <div className="flex-1 w-full">
-          {/* Global Loading State */}
-          {viewState === 'loading' && (
+          {/* Global Loading State for Single-Profile Tabs */}
+          {activeTab !== 'compare' && viewState === 'loading' && (
             <LoadingState message={`Analyzing profile for @${lastSearchedUser}...`} />
           )}
 
-          {/* Global Error State */}
-          {viewState === 'error' && (
+          {/* Global Error State for Single-Profile Tabs */}
+          {activeTab !== 'compare' && viewState === 'error' && (
             <ErrorState
               error={error}
               onRetry={lastSearchedUser ? () => handleSearch(lastSearchedUser) : undefined}
             />
           )}
 
-          {/* Tab Views */}
+          {/* Single-Profile Tab Views (Overview, Repositories, Analytics) */}
           {viewState !== 'loading' && viewState !== 'error' && (
             <>
               {/* TAB 1: OVERVIEW */}
@@ -334,32 +337,22 @@ export function App() {
                   />
                 )}
               </div>
-
-
-
-              {/* TAB 4: COMPARE (Transparent placeholder) */}
-              <div
-                role="tabpanel"
-                id="panel-compare"
-                aria-labelledby="tab-compare"
-                hidden={activeTab !== 'compare'}
-              >
-                <TabPlaceholder
-                  title="Developer Profile Comparison"
-                  badge="Planned Stage 4"
-                  icon={GitCompare}
-                  description="Side-by-side metric comparison between two public GitHub accounts."
-                  contextNote="Will query two distinct GitHub user payloads and correlate follower counts, star totals, and language footprints side-by-side without mock numbers."
-                  plannedFeatures={[
-                    'Dual-user search input with comparative metrics',
-                    'Radar chart of language specialization',
-                    'Repository volume and star velocity comparison',
-                    'Export comparative summary report as Markdown',
-                  ]}
-                />
-              </div>
             </>
           )}
+
+          {/* TAB 4: COMPARE */}
+          <div
+            role="tabpanel"
+            id="panel-compare"
+            aria-labelledby="tab-compare"
+            hidden={activeTab !== 'compare'}
+          >
+            <ProfileComparisonView
+              activeUser={currentUser}
+              activeRepos={repos}
+              onRateLimitUpdate={setRateLimit}
+            />
+          </div>
         </div>
       </main>
 

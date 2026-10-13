@@ -181,3 +181,61 @@ export interface ApiError {
   resetTime?: Date;
   documentation_url?: string;
 }
+
+export interface ComparisonInputValidation {
+  isValid: boolean;
+  errorMessage: string | null;
+  normalizedUserA: string;
+  normalizedUserB: string;
+}
+
+export interface ComparedProfileSlot {
+  username: string;
+  status: ViewState;
+  user: GitHubUser | null;
+  repos: GitHubRepo[];
+  page: number;
+  hasMoreRepos: boolean;
+  isLoadingMore: boolean;
+  error: ApiError | null;
+}
+
+export interface MetricComparisonItem {
+  key: string;
+  label: string;
+  valueA: number | null;
+  valueB: number | null;
+  formattedA: string;
+  formattedB: string;
+  subLabelA?: string;
+  subLabelB?: string;
+  isPartialA?: boolean;
+  isPartialB?: boolean;
+  higherSide: 'A' | 'B' | 'equal' | 'unavailable';
+  diffFormatted: string | null;
+  ratioA: number;
+  ratioB: number;
+  footnote?: string;
+}
+
+export interface LanguageComparisonRow {
+  language: string;
+  color: string;
+  countA: number;
+  percentageA: number;
+  countB: number;
+  percentageB: number;
+}
+
+export interface ProfileComparisonSummary {
+  statsA: DashboardOverviewStats | null;
+  statsB: DashboardOverviewStats | null;
+  languageAnalyticsA: LanguageAnalyticsResult | null;
+  languageAnalyticsB: LanguageAnalyticsResult | null;
+  metrics: MetricComparisonItem[];
+  sharedLanguages: string[];
+  uniqueLanguagesA: string[];
+  uniqueLanguagesB: string[];
+  languageRows: LanguageComparisonRow[];
+}
+

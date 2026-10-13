@@ -50,9 +50,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       id: 'compare',
       label: 'Compare',
       icon: GitCompare,
-      statusNote: 'Preview',
     },
-
   ];
 
   return (
