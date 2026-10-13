@@ -93,15 +93,27 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   }, [owner, repoName]);
 
   const handleRetry = () => {
+    if (isLoadingRepo) return;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoadingRepo(true);
     setIsLoadingReadme(true);
     setError(null);
-    githubService.getRepoDetail(owner, repoName)
+    githubService.getRepoDetail(owner, repoName, controller.signal)
       .then((res) => setRepo(res.data))
-      .catch((err) => setError(err as ApiError))
+      .catch((err) => {
+        if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+          return;
+        }
+        setError(err as ApiError);
+      })
       .finally(() => setIsLoadingRepo(false));
 
-    githubService.getRepoReadme(owner, repoName)
+    githubService.getRepoReadme(owner, repoName, controller.signal)
       .then((res) => setReadme(res.data))
       .catch(() => setReadme(null))
       .finally(() => setIsLoadingReadme(false));
@@ -110,9 +122,9 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   // Error State for Repository Details
   if (error && !repo) {
     return (
-      <div className="w-full max-w-4xl mx-auto my-10 p-8 rounded-xl bg-[#161b22] border border-[#30363d] text-center">
+      <div role="alert" className="w-full max-w-4xl mx-auto my-10 p-8 rounded-xl bg-[#161b22] border border-[#30363d] text-center">
         <div className="w-12 h-12 mx-auto rounded-full bg-red-950/40 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
-          <AlertCircle className="w-6 h-6" />
+          <AlertCircle className="w-6 h-6" aria-hidden="true" />
         </div>
         <h3 className="text-lg font-semibold text-neutral-100 mb-2">
           Repository Unavailable
@@ -124,18 +136,19 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
           <button
             onClick={onBack}
             type="button"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-neutral-300 rounded-lg text-xs font-semibold border border-[#30363d] transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-neutral-300 rounded-lg text-xs font-semibold border border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             <span>Back to Repositories</span>
           </button>
           <button
             onClick={handleRetry}
+            disabled={isLoadingRepo}
             type="button"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#238636] hover:bg-[#2ea043] text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>Try Again</span>
+            <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <span>{isLoadingRepo ? 'Retrying...' : 'Try Again'}</span>
           </button>
         </div>
       </div>
@@ -380,9 +393,27 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
         </div>
 
         {isLoadingReadme ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-3 text-neutral-400 text-sm">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
-            <span>Loading README from repository...</span>
+          <div
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            className="py-4 space-y-4 animate-pulse"
+          >
+            <div className="flex items-center gap-2 text-neutral-400 text-xs mb-2">
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-400" aria-hidden="true" />
+              <span>Loading README from repository...</span>
+            </div>
+            <div className="h-7 bg-[#21262d] rounded w-1/3" />
+            <div className="space-y-2.5">
+              <div className="h-3.5 bg-[#21262d] rounded w-full" />
+              <div className="h-3.5 bg-[#21262d] rounded w-11/12" />
+              <div className="h-3.5 bg-[#21262d] rounded w-3/4" />
+            </div>
+            <div className="h-24 bg-[#0d1117] border border-[#30363d] rounded-lg w-full" />
+            <div className="space-y-2.5">
+              <div className="h-3.5 bg-[#21262d] rounded w-5/6" />
+              <div className="h-3.5 bg-[#21262d] rounded w-2/3" />
+            </div>
           </div>
         ) : readme && readme.content ? (
           <MarkdownRenderer content={readme.content} />

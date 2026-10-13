@@ -44,29 +44,61 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
   const topBorderClass =
     accentColor === 'emerald' ? 'border-t-emerald-500/70' : 'border-t-sky-500/70';
 
-  // 1. Loading State
+  // 1. Loading State (Content-Matched Skeleton to prevent layout shift)
   if (slot.status === 'loading') {
     return (
       <div
-        className={`p-6 rounded-xl bg-[#161b22] border border-[#30363d] border-t-2 ${topBorderClass} flex flex-col items-center justify-center min-h-[320px] text-center space-y-3`}
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        className={`p-5 sm:p-6 rounded-xl bg-[#161b22] border border-[#30363d] border-t-2 ${topBorderClass} flex flex-col justify-between space-y-5 shadow-sm animate-pulse`}
       >
-        <Loader2
-          className={`w-7 h-7 animate-spin ${
-            accentColor === 'emerald' ? 'text-emerald-400' : 'text-sky-400'
-          }`}
-          aria-hidden="true"
-        />
-        <div className="space-y-1">
-          <span
-            className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono border ${badgeClasses}`}
-          >
-            {slotLabel}
-          </span>
-          <p className="text-sm font-medium text-neutral-200 pt-1">
-            Fetching profile & repositories for{' '}
-            <span className="font-mono text-white">@{slot.username}</span>...
-          </p>
-          <p className="text-xs text-neutral-500">Querying GitHub REST API</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold border ${badgeClasses}`}
+            >
+              {slotLabel}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-neutral-400">
+              <Loader2
+                className={`w-3.5 h-3.5 animate-spin ${
+                  accentColor === 'emerald' ? 'text-emerald-400' : 'text-sky-400'
+                }`}
+                aria-hidden="true"
+              />
+              <span className="font-mono">@{slot.username}</span>
+            </span>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-[#21262d] border border-[#30363d] shrink-0" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="h-5 bg-[#21262d] rounded w-1/2" />
+              <div className="h-3.5 bg-[#21262d] rounded w-1/3" />
+              <div className="h-3.5 bg-[#21262d] rounded w-4/5 mt-2" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="p-2.5 rounded-lg bg-[#0d1117] border border-[#30363d] space-y-2">
+                <div className="h-3 bg-[#21262d] rounded w-12" />
+                <div className="h-4 bg-[#21262d] rounded w-10" />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] space-y-2">
+            <div className="h-3 bg-[#21262d] rounded w-36" />
+            <div className="h-4 bg-[#21262d] rounded w-1/2" />
+            <div className="h-3 bg-[#21262d] rounded w-3/4" />
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-[#30363d] flex items-center justify-between">
+          <div className="h-3.5 bg-[#21262d] rounded w-40" />
+          <div className="h-3.5 bg-[#21262d] rounded w-20" />
         </div>
       </div>
     );

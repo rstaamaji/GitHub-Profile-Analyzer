@@ -32,6 +32,7 @@ export function App() {
   const [repoPage, setRepoPage] = useState<number>(1);
   const [hasMoreRepos, setHasMoreRepos] = useState<boolean>(false);
   const [isLoadingMoreRepos, setIsLoadingMoreRepos] = useState<boolean>(false);
+  const [repoLoadError, setRepoLoadError] = useState<ApiError | null>(null);
   const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
   const [viewState, setViewState] = useState<ViewState>('idle');
   const [activeTab, setActiveTab] = useState<NavigationTab>('overview');
@@ -41,23 +42,20 @@ export function App() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeSearchUserRef = useRef<string>('');
 
-
-
   // Initial rate limit fetch on mount
   useEffect(() => {
     githubService.getRateLimit().then((info) => {
       if (info) setRateLimit(info);
     });
 
+    const controllerRef = abortControllerRef;
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      controllerRef.current?.abort();
     };
   }, []);
 
   const handleSearch = useCallback(async (username: string) => {
-    const cleanUsername = username.trim();
+    const cleanUsername = username.trim().replace(/^@/, '');
     if (!cleanUsername) return;
 
     // Prevent submitting the same username if already loading
@@ -74,12 +72,16 @@ export function App() {
     abortControllerRef.current = controller;
     activeSearchUserRef.current = cleanUsername;
 
-    setViewState('loading');
-    setError(null);
+    // Clear previous profile data immediately so stale data is never shown for the new username
+    setCurrentUser(null);
+    setRepos([]);
     setSelectedRepo(null);
+    setHasMoreRepos(false);
+    setRepoLoadError(null);
+    setError(null);
+    setViewState('loading');
     setLastSearchedUser(cleanUsername);
     setRepoPage(1);
-
 
     try {
       // 1. Fetch user profile
@@ -88,16 +90,48 @@ export function App() {
         setRateLimit(userRes.rateLimit);
       }
 
-      // 2. Fetch initial batch of public repos
-      const reposRes = await githubService.getUserRepos(cleanUsername, 30, 1, 'pushed', controller.signal);
-      if (reposRes.rateLimit) {
-        setRateLimit(reposRes.rateLimit);
+      setCurrentUser(userRes.data);
+
+      // 2. Fetch initial batch of public repos (preserve user profile even if repo fetch fails)
+      try {
+        const reposRes = await githubService.getUserRepos(
+          cleanUsername,
+          30,
+          1,
+          'pushed',
+          controller.signal
+        );
+        if (reposRes.rateLimit) {
+          setRateLimit(reposRes.rateLimit);
+        }
+
+        setRepos(reposRes.data);
+        setRepoPage(1);
+        setHasMoreRepos(
+          Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos
+        );
+      } catch (repoErr: unknown) {
+        if (
+          repoErr &&
+          typeof repoErr === 'object' &&
+          'name' in repoErr &&
+          (repoErr as { name: string }).name === 'AbortError'
+        ) {
+          return;
+        }
+        const apiRepoErr = repoErr as ApiError;
+        setRepos([]);
+        setRepoPage(0);
+        setHasMoreRepos(userRes.data.public_repos > 0);
+        setRepoLoadError({
+          message:
+            apiRepoErr.message ||
+            'Profile loaded, but initial repository list could not be retrieved.',
+          status: apiRepoErr.status,
+          resetTime: apiRepoErr.resetTime,
+        });
       }
 
-      setCurrentUser(userRes.data);
-      setRepos(reposRes.data);
-      // Determine if there are more repositories to fetch
-      setHasMoreRepos(Boolean(reposRes.hasNextPage) || reposRes.data.length < userRes.data.public_repos);
       setViewState('success');
       setActiveTab('overview');
     } catch (err: unknown) {
@@ -124,6 +158,7 @@ export function App() {
     if (!currentUser || isLoadingMoreRepos || !hasMoreRepos) return;
 
     setIsLoadingMoreRepos(true);
+    setRepoLoadError(null);
     const nextPage = repoPage + 1;
 
     try {
@@ -153,8 +188,12 @@ export function App() {
       setRepoPage(nextPage);
     } catch (err: unknown) {
       const apiErr = err as ApiError;
-      // Do not replace the existing page view, but notify in state if appropriate
-      console.error('Failed to load more repositories:', apiErr.message);
+      // Preserve existing loaded repositories and surface an inline error with retry
+      setRepoLoadError({
+        message: apiErr.message || 'Failed to load the next batch of repositories.',
+        status: apiErr.status,
+        resetTime: apiErr.resetTime,
+      });
     } finally {
       setIsLoadingMoreRepos(false);
     }
@@ -170,19 +209,25 @@ export function App() {
     setRepos([]);
     setSelectedRepo(null);
     setRepoPage(1);
-
     setHasMoreRepos(false);
     setIsLoadingMoreRepos(false);
+    setRepoLoadError(null);
     setViewState('idle');
     setError(null);
     setLastSearchedUser('');
     setActiveTab('overview');
   };
 
-
-
   return (
     <div className="min-h-screen flex flex-col bg-[#0d1117] text-[#e6edf3]">
+      {/* Accessible Skip-to-Content Link for Keyboard Users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-emerald-600 focus:text-white focus:text-xs focus:font-semibold focus:shadow-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       {/* 1. Header with live rate limit status */}
       <Header
         rateLimit={rateLimit}
@@ -199,7 +244,7 @@ export function App() {
       />
 
       {/* 3. Main content shell */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 md:py-10 flex flex-col">
+      <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 md:py-10 flex flex-col">
         {/* Single-Profile Search header container (shown on Overview, Repositories, and Analytics tabs) */}
         {activeTab !== 'compare' && (
           <section aria-label="Profile Search" className="mb-8 text-center">
@@ -224,7 +269,9 @@ export function App() {
           {activeTab !== 'compare' && viewState === 'error' && (
             <ErrorState
               error={error}
+              searchedUsername={lastSearchedUser}
               onRetry={lastSearchedUser ? () => handleSearch(lastSearchedUser) : undefined}
+              onReset={handleReset}
             />
           )}
 
@@ -244,6 +291,7 @@ export function App() {
                     repos={repos}
                     hasMoreRepos={hasMoreRepos}
                     isLoadingMore={isLoadingMoreRepos}
+                    repoLoadError={repoLoadError}
                     onFetchMoreRepos={handleLoadMoreRepos}
                     onSelectRepo={(repo) => {
                       setSelectedRepo(repo);
@@ -278,6 +326,7 @@ export function App() {
                     username={currentUser.login}
                     isLoadingMore={isLoadingMoreRepos}
                     hasMore={hasMoreRepos}
+                    repoLoadError={repoLoadError}
                     onLoadMore={handleLoadMoreRepos}
                     onSelectRepo={(repo) => setSelectedRepo(repo)}
                   />

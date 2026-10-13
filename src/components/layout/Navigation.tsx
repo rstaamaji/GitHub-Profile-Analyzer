@@ -53,6 +53,30 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
   ];
 
+  const tabRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+    const count = navItems.length;
+    let nextIndex: number | null = null;
+
+    if (e.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % count;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + count) % count;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = count - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      const nextItem = navItems[nextIndex];
+      onTabChange(nextItem.id);
+      tabRefs.current[nextIndex]?.focus();
+    }
+  };
+
   return (
     <nav
       aria-label="Application sections"
@@ -65,19 +89,23 @@ export const Navigation: React.FC<NavigationProps> = ({
           aria-orientation="horizontal"
           className="flex items-center gap-1 sm:gap-2 -mb-px overflow-x-auto no-scrollbar py-2 sm:py-0"
         >
-          {navItems.map((item) => {
+          {navItems.map((item, idx) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
             return (
               <button
                 key={item.id}
+                ref={(el) => {
+                  tabRefs.current[idx] = el;
+                }}
                 role="tab"
                 id={`tab-${item.id}`}
                 aria-selected={isActive}
                 aria-controls={`panel-${item.id}`}
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => onTabChange(item.id)}
+                onKeyDown={(e) => handleKeyDown(e, idx)}
                 type="button"
                 className={`group inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm font-medium border-b-2 transition-colors cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] rounded-t-md ${
                   isActive
