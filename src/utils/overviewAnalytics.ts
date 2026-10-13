@@ -1,5 +1,6 @@
 import type { GitHubRepo, GitHubUser, DashboardOverviewStats } from '../types/github';
 import { calculateLanguageAnalytics } from './languageAnalytics';
+import { getSafeRepoTimestamp } from './repoFilterSort';
 
 /**
  * Calculates aggregate developer overview metrics deterministically.
@@ -35,19 +36,21 @@ export function calculateOverviewStats(
       archivedReposCount++;
     }
 
-    totalBatchStars += repo.stargazers_count;
-    totalBatchForks += repo.forks_count;
+    const stars = repo.stargazers_count ?? 0;
+    const forks = repo.forks_count ?? 0;
+    totalBatchStars += stars;
+    totalBatchForks += forks;
 
     // Highest starred repo
-    if (!mostStarredRepo || repo.stargazers_count > mostStarredRepo.stargazers_count) {
+    if (!mostStarredRepo || stars > (mostStarredRepo.stargazers_count ?? 0)) {
       mostStarredRepo = repo;
     }
 
-    // Most recently pushed repo
-    const currentPushTime = new Date(repo.pushed_at || repo.updated_at).getTime();
+    // Most recently pushed repo (safe against empty/null/invalid timestamps)
+    const currentPushTime = getSafeRepoTimestamp(repo);
     const prevBestPushTime = mostRecentlyPushedRepo
-      ? new Date(mostRecentlyPushedRepo.pushed_at || mostRecentlyPushedRepo.updated_at).getTime()
-      : 0;
+      ? getSafeRepoTimestamp(mostRecentlyPushedRepo)
+      : -1;
 
     if (!mostRecentlyPushedRepo || currentPushTime > prevBestPushTime) {
       mostRecentlyPushedRepo = repo;

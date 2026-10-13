@@ -107,9 +107,12 @@ export function calculateLanguageAnalytics(
 
   const distinctLanguagesCount = Object.keys(countsByLanguage).length;
 
-  // Build ranked breakdown list
+  // Build ranked breakdown list (count desc, then alphabetical A-Z for deterministic tie-breaking)
   const breakdown: LanguageStat[] = Object.entries(countsByLanguage)
-    .sort((a, b) => b[1] - a[1]) // Sort descending by repository count
+    .sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return a[0].localeCompare(b[0]);
+    })
     .map(([language, count], idx) => {
       // Calculate percentage against total repositories that have a designated primary language
       const percentage = totalWithLanguage > 0 ? (count / totalWithLanguage) * 100 : 0;
