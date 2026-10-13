@@ -30,6 +30,8 @@ interface ProfileComparisonViewProps {
   activeUser?: GitHubUser | null;
   activeRepos?: GitHubRepo[];
   onRateLimitUpdate?: (info: RateLimitInfo) => void;
+  initialSlotA?: ComparedProfileSlot;
+  initialSlotB?: ComparedProfileSlot;
 }
 
 const EXAMPLE_PAIRS: Array<{ label: string; userA: string; userB: string; note: string }> = [
@@ -68,14 +70,16 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
   activeUser = null,
   activeRepos = [],
   onRateLimitUpdate,
+  initialSlotA = INITIAL_SLOT,
+  initialSlotB = INITIAL_SLOT,
 }) => {
-  const [inputA, setInputA] = useState<string>('');
-  const [inputB, setInputB] = useState<string>('');
+  const [inputA, setInputA] = useState<string>(initialSlotA.username || '');
+  const [inputB, setInputB] = useState<string>(initialSlotB.username || '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [excludeForks, setExcludeForks] = useState<boolean>(true);
 
-  const [slotA, setSlotA] = useState<ComparedProfileSlot>(INITIAL_SLOT);
-  const [slotB, setSlotB] = useState<ComparedProfileSlot>(INITIAL_SLOT);
+  const [slotA, setSlotA] = useState<ComparedProfileSlot>(initialSlotA);
+  const [slotB, setSlotB] = useState<ComparedProfileSlot>(initialSlotB);
 
   // AbortControllers & request tokens per slot to prevent stale responses
   const abortControllerARef = useRef<AbortController | null>(null);
@@ -118,10 +122,6 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
       }
 
       const currentToken = ++tokenRef.current;
-
-      if (forceRefresh) {
-        githubService.invalidateUserCache(cleanUsername);
-      }
 
       // 1. Reuse the currently active main-app profile if it already has all public repos loaded
       if (

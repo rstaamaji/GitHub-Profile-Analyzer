@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, Star, GitFork, ExternalLink, ArrowRight, Info } from 'lucide-react';
 import type { GitHubRepo } from '../../types/github';
+import { getSafeRepoTimestamp } from '../../utils/repoFilterSort';
 
 interface RecentActivityListProps {
   repos: GitHubRepo[];
@@ -17,8 +18,8 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
   const recentRepos = React.useMemo(() => {
     return [...repos]
       .sort((a, b) => {
-        const timeA = new Date(a.pushed_at || a.updated_at).getTime();
-        const timeB = new Date(b.pushed_at || b.updated_at).getTime();
+        const timeA = getSafeRepoTimestamp(a);
+        const timeB = getSafeRepoTimestamp(b);
         if (timeB !== timeA) return timeB - timeA;
         return a.name.localeCompare(b.name);
       })

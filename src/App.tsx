@@ -77,10 +77,6 @@ export function App() {
         abortControllerRef.current.abort();
       }
 
-      if (forceRefresh) {
-        githubService.invalidateUserCache(cleanUsername);
-      }
-
       const controller = new AbortController();
       abortControllerRef.current = controller;
       activeSearchUserRef.current = cleanUsername;
