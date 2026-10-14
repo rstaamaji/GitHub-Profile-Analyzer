@@ -74,7 +74,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
             role="radio"
             aria-checked={timeRange === '30d'}
             onClick={() => setTimeRange('30d')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               timeRange === '30d'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -87,7 +87,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
             role="radio"
             aria-checked={timeRange === '90d'}
             onClick={() => setTimeRange('90d')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               timeRange === '90d'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -100,7 +100,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
             role="radio"
             aria-checked={timeRange === '12m'}
             onClick={() => setTimeRange('12m')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               timeRange === '12m'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
@@ -133,16 +133,16 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
               onClick={onFetchMoreRepos}
               disabled={isLoadingMore}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               {isLoadingMore ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin text-emerald-400" aria-hidden="true" />
                   <span>Loading batch...</span>
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
                   <span>Load more repositories</span>
                 </>
               )}
@@ -171,7 +171,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.activeReposCount}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             Had push or update events
           </div>
         </div>
@@ -184,7 +184,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.pushedReposCount}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             Distinct repos with git push
           </div>
         </div>
@@ -197,7 +197,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.updatedOnlyReposCount}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             Issues/stars/details modified
           </div>
         </div>
@@ -210,7 +210,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {Math.max(0, analytics.totalReposInDataset - analytics.activeReposCount)}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             No events in selected timeframe
           </div>
         </div>
@@ -230,14 +230,35 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
               Breakdown of distinct repositories touched over time intervals in this window.
             </p>
           </div>
-          <span className="text-[11px] font-mono text-neutral-500">
+          <span className="text-[11px] font-mono text-neutral-400">
             Interval: {timeRange === '12m' ? 'Monthly' : timeRange === '90d' ? 'Bi-weekly' : 'Weekly'}
           </span>
         </div>
 
+        {/* Screen-reader Accessible Data Table */}
+        <table className="sr-only">
+          <caption>Repository activity cadence for @{username} ({timeRange === '12m' ? 'Past 12 Months' : timeRange === '90d' ? 'Past 90 Days' : 'Past 30 Days'})</caption>
+          <thead>
+            <tr>
+              <th scope="col">Interval Period</th>
+              <th scope="col">Distinct Repos Pushed</th>
+              <th scope="col">Distinct Repos Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {analytics.buckets.map((b) => (
+              <tr key={b.periodKey}>
+                <td>{b.periodLabel}</td>
+                <td>{b.pushCount}</td>
+                <td>{b.updateCount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
         <ActivityChart buckets={analytics.buckets} />
 
-        <div className="text-[11px] text-neutral-500 pt-2 border-t border-[#21262d] leading-relaxed">
+        <div className="text-[11px] text-neutral-400 pt-2 border-t border-[#21262d] leading-relaxed">
           * Notice: Public repository events do not represent all of a user&apos;s contributions. Private commits, organizational contributions without public membership, and commits on forks are not counted here.
         </div>
       </section>
@@ -289,7 +310,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
                             const fullRepo = repos.find((r) => r.id === item.id);
                             if (fullRepo) onSelectRepo(fullRepo);
                           }}
-                          className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-xs sm:max-w-md"
+                          className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-xs sm:max-w-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                         >
                           {item.name}
                         </button>
@@ -298,10 +319,11 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
                           href={item.html_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 truncate max-w-xs sm:max-w-md"
+                          aria-label={`Open ${item.name} on GitHub (opens in a new tab)`}
+                          className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 truncate max-w-xs sm:max-w-md rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                         >
                           <span>{item.name}</span>
-                          <ExternalLink className="w-3 h-3 opacity-60" />
+                          <ExternalLink className="w-3 h-3 opacity-60" aria-hidden="true" />
                         </a>
                       )}
 
@@ -329,11 +351,11 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
                   <div className="flex items-center gap-4 text-xs font-mono text-neutral-400 shrink-0 self-start sm:self-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#21262d]">
                     <div className="text-right">
                       <div className="text-neutral-300 flex items-center gap-1 sm:justify-end">
-                        <GitCommit className="w-3 h-3 text-emerald-400" />
+                        <GitCommit className="w-3 h-3 text-emerald-400" aria-hidden="true" />
                         <span>Pushed: {pushDate}</span>
                       </div>
-                      <div className="text-[11px] text-neutral-500 flex items-center gap-1 sm:justify-end">
-                        <Clock className="w-3 h-3 text-blue-400" />
+                      <div className="text-[11px] text-neutral-400 flex items-center gap-1 sm:justify-end">
+                        <Clock className="w-3 h-3 text-blue-400" aria-hidden="true" />
                         <span>Updated: {updateDate}</span>
                       </div>
                     </div>
@@ -344,11 +366,11 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsViewProps> = ({
           </div>
         ) : (
           <div className="p-8 text-center rounded-lg bg-[#0d1117] border border-[#21262d] space-y-2">
-            <FolderGit2 className="w-6 h-6 text-neutral-500 mx-auto" aria-hidden="true" />
+            <FolderGit2 className="w-6 h-6 text-neutral-400 mx-auto" aria-hidden="true" />
             <h4 className="text-xs font-semibold text-neutral-300">
               No Repository Activity in Selected Period
             </h4>
-            <p className="text-xs text-neutral-500 max-w-md mx-auto">
+            <p className="text-xs text-neutral-400 max-w-md mx-auto">
               None of the analyzed public repositories have had recorded code pushes or updates in the past {timeRange === '30d' ? '30 days' : timeRange === '90d' ? '90 days' : '12 months'}. Try choosing a broader period (e.g. Past 12 Months).
             </p>
           </div>
