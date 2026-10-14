@@ -86,13 +86,22 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             aria-invalid={Boolean(emptyHint)}
             aria-describedby={emptyHint ? 'search-empty-hint' : 'search-helper-note'}
             value={username}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                if (emptyHint) {
+                  setEmptyHint(null);
+                } else if (username) {
+                  handleClear();
+                }
+              }
+            }}
             onChange={(e) => {
               setUsername(e.target.value);
               if (emptyHint) setEmptyHint(null);
             }}
             placeholder="Search GitHub username (e.g. torvalds, vercel, shadcn)..."
             disabled={isLoading}
-            className={`w-full bg-[#161b22] text-neutral-100 placeholder-neutral-500 pl-12 pr-28 sm:pr-36 py-3.5 rounded-xl border focus:outline-none focus:ring-2 text-sm sm:text-base font-normal transition duration-150 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed ${
+            className={`w-full bg-[#161b22] text-neutral-100 placeholder-neutral-400 pl-12 pr-28 sm:pr-36 py-3.5 rounded-xl border focus:outline-none focus:ring-2 text-sm sm:text-base font-normal transition duration-150 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed ${
               emptyHint
                 ? 'border-amber-500/60 focus:border-amber-400 focus:ring-amber-500/30'
                 : 'border-[#30363d] focus:border-neutral-400 focus:ring-emerald-500/40'
@@ -120,7 +129,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 motion-safe:animate-spin" aria-hidden="true" />
                   <span>Analyzing</span>
                 </>
               ) : (

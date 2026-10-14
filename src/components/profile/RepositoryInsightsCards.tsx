@@ -36,7 +36,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
           <button
             type="button"
             onClick={() => onNavigateToTab('analytics')}
-            className="text-xs text-neutral-400 hover:text-emerald-400 flex items-center gap-1 transition cursor-pointer font-medium"
+            className="text-xs text-neutral-400 hover:text-emerald-400 flex items-center gap-1 transition cursor-pointer font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md px-1 py-0.5"
           >
             <span>Lihat Analisis Lengkap</span>
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -50,7 +50,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
           <div>
             <div className="flex items-center justify-between text-xs text-neutral-400 mb-2">
               <span className="font-semibold uppercase tracking-wider text-[11px] text-amber-400 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5" />
+                <Star className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Bintang Terbanyak</span>
               </span>
               <span className="font-mono text-neutral-300 font-bold">
@@ -65,7 +65,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                     <button
                       type="button"
                       onClick={() => onSelectRepo(mostStarredRepo)}
-                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-full"
+                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                     >
                       {mostStarredRepo.name}
                     </button>
@@ -74,10 +74,11 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                       href={mostStarredRepo.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline truncate max-w-full inline-flex items-center gap-1"
+                      aria-label={`Open ${mostStarredRepo.name} on GitHub (opens in a new tab)`}
+                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline truncate max-w-full inline-flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                     >
                       <span>{mostStarredRepo.name}</span>
-                      <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                      <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
                     </a>
                   )}
                 </div>
@@ -87,7 +88,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                 </p>
               </>
             ) : (
-              <p className="text-xs text-neutral-500 italic">Belum ada repository.</p>
+              <p className="text-xs text-neutral-400 italic">Belum ada repository.</p>
             )}
           </div>
 
@@ -95,12 +96,12 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
             <div className="flex items-center gap-3 text-xs text-neutral-400 pt-3 border-t border-[#21262d]">
               {mostStarredRepo.language && (
                 <span className="flex items-center gap-1 text-neutral-300 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
                   <span>{mostStarredRepo.language}</span>
                 </span>
               )}
               <span className="flex items-center gap-1 font-mono text-neutral-400">
-                <GitFork className="w-3 h-3" />
+                <GitFork className="w-3 h-3" aria-hidden="true" />
                 <span>{mostStarredRepo.forks_count}</span>
               </span>
             </div>
@@ -112,7 +113,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
           <div>
             <div className="flex items-center justify-between text-xs text-neutral-400 mb-2">
               <span className="font-semibold uppercase tracking-wider text-[11px] text-emerald-400 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Baru Diperbarui</span>
               </span>
               <span className="font-mono text-neutral-400 text-[11px]">
@@ -132,7 +133,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                     <button
                       type="button"
                       onClick={() => onSelectRepo(mostRecentlyPushedRepo)}
-                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-full"
+                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline text-left cursor-pointer truncate max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                     >
                       {mostRecentlyPushedRepo.name}
                     </button>
@@ -141,10 +142,11 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                       href={mostRecentlyPushedRepo.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline truncate max-w-full inline-flex items-center gap-1"
+                      aria-label={`Open ${mostRecentlyPushedRepo.name} on GitHub (opens in a new tab)`}
+                      className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline truncate max-w-full inline-flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                     >
                       <span>{mostRecentlyPushedRepo.name}</span>
-                      <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                      <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
                     </a>
                   )}
                 </div>
@@ -154,7 +156,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                 </p>
               </>
             ) : (
-              <p className="text-xs text-neutral-500 italic">Belum ada repository.</p>
+              <p className="text-xs text-neutral-400 italic">Belum ada repository.</p>
             )}
           </div>
 
@@ -162,12 +164,12 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
             <div className="flex items-center gap-3 text-xs text-neutral-400 pt-3 border-t border-[#21262d]">
               {mostRecentlyPushedRepo.language && (
                 <span className="flex items-center gap-1 text-neutral-300 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
                   <span>{mostRecentlyPushedRepo.language}</span>
                 </span>
               )}
               <span className="flex items-center gap-1 font-mono text-neutral-400">
-                <Star className="w-3 h-3" />
+                <Star className="w-3 h-3" aria-hidden="true" />
                 <span>{mostRecentlyPushedRepo.stargazers_count}</span>
               </span>
             </div>
@@ -179,7 +181,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
           <div>
             <div className="flex items-center justify-between text-xs text-neutral-400 mb-2">
               <span className="font-semibold uppercase tracking-wider text-[11px] text-blue-400 flex items-center gap-1">
-                <Code2 className="w-3.5 h-3.5" />
+                <Code2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Bahasa Utama</span>
               </span>
               <span className="font-mono text-emerald-400 font-semibold text-xs">
@@ -193,6 +195,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: topLanguage.color }}
+                    aria-hidden="true"
                   />
                   <h4 className="text-xl font-bold font-mono text-neutral-100">
                     {topLanguage.language}
@@ -204,11 +207,11 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
                 </p>
               </>
             ) : (
-              <p className="text-xs text-neutral-500 italic">Tidak ada bahasa utama terdeteksi.</p>
+              <p className="text-xs text-neutral-400 italic">Tidak ada bahasa utama terdeteksi.</p>
             )}
           </div>
 
-          <div className="pt-3 border-t border-[#21262d] text-[11px] text-neutral-500">
+          <div className="pt-3 border-t border-[#21262d] text-[11px] text-neutral-400">
             * Dihitung berdasarkan jumlah repository yang memiliki tag bahasa.
           </div>
         </div>

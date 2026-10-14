@@ -46,6 +46,17 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Keyboard shortcut: Escape to return to repositories list
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onBack();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onBack]);
+
   useEffect(() => {
     // Abort previous in-flight requests
     if (abortControllerRef.current) {
@@ -284,7 +295,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : 'text-neutral-400'}`}
+              className={`w-3.5 h-3.5 ${isRefreshing ? 'motion-safe:animate-spin text-emerald-400' : 'text-neutral-400'}`}
               aria-hidden="true"
             />
             <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
@@ -294,7 +305,8 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
             href={repo.html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition"
+            aria-label={`View ${repo.name} on GitHub (opens in a new tab)`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
             <span>View on GitHub</span>
             <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
@@ -488,7 +500,8 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
               href={readme.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-neutral-400 hover:text-blue-400 flex items-center gap-1 transition"
+              aria-label="View raw README file on GitHub (opens in a new tab)"
+              className="text-xs text-neutral-300 hover:text-blue-400 flex items-center gap-1 transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <span>Raw on GitHub</span>
               <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -501,10 +514,10 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
             role="status"
             aria-live="polite"
             aria-busy="true"
-            className="py-4 space-y-4 animate-pulse"
+            className="py-4 space-y-4 motion-safe:animate-pulse"
           >
             <div className="flex items-center gap-2 text-neutral-400 text-xs mb-2">
-              <Loader2 className="w-4 h-4 animate-spin text-emerald-400" aria-hidden="true" />
+              <Loader2 className="w-4 h-4 motion-safe:animate-spin text-emerald-400" aria-hidden="true" />
               <span>Loading README from repository...</span>
             </div>
             <div className="h-7 bg-[#21262d] rounded w-1/3" />

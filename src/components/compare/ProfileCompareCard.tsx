@@ -51,7 +51,7 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
         role="status"
         aria-live="polite"
         aria-busy="true"
-        className={`p-5 sm:p-6 rounded-xl bg-[#161b22] border border-[#30363d] border-t-2 ${topBorderClass} flex flex-col justify-between space-y-5 shadow-sm animate-pulse`}
+        className={`p-5 sm:p-6 rounded-xl bg-[#161b22] border border-[#30363d] border-t-2 ${topBorderClass} flex flex-col justify-between space-y-5 shadow-sm motion-safe:animate-pulse`}
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-2">
@@ -62,7 +62,7 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
             </span>
             <span className="inline-flex items-center gap-1.5 text-xs text-neutral-400">
               <Loader2
-                className={`w-3.5 h-3.5 animate-spin ${
+                className={`w-3.5 h-3.5 motion-safe:animate-spin ${
                   accentColor === 'emerald' ? 'text-emerald-400' : 'text-sky-400'
                 }`}
                 aria-hidden="true"
@@ -180,7 +180,7 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
               onClick={onRetry}
               type="button"
               title={`Refresh @${user.login} data from GitHub API`}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[11px] font-medium text-neutral-300 hover:text-white transition cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[11px] font-medium text-neutral-300 hover:text-white transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <RefreshCw className="w-3 h-3" aria-hidden="true" />
               <span>Refresh</span>
@@ -190,7 +190,8 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
               href={user.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-100 transition font-medium"
+              aria-label={`View ${user.login}'s profile on GitHub (opens in a new tab)`}
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-300 hover:text-white transition font-medium rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <span>View on GitHub</span>
               <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
@@ -216,7 +217,7 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
         <div className="flex items-start gap-4">
           <img
             src={user.avatar_url}
-            alt={`${user.login} avatar`}
+            alt={`${user.name || user.login}'s profile picture`}
             className="w-16 h-16 rounded-full border border-[#30363d] bg-[#0d1117] shrink-0 object-cover"
           />
           <div className="min-w-0 flex-1">
@@ -230,7 +231,7 @@ export const ProfileCompareCard: React.FC<ProfileCompareCardProps> = ({
                 {user.bio}
               </p>
             ) : (
-              <p className="text-xs text-neutral-500 italic mt-2">No public bio provided</p>
+              <p className="text-xs text-neutral-400 italic mt-2">No public bio provided</p>
             )}
           </div>
         </div>

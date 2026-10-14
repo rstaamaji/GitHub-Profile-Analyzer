@@ -116,7 +116,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
             <span>Repositories for</span>
             <span className="font-mono text-emerald-400">@{username}</span>
           </h2>
-          <p className="text-xs text-neutral-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1" aria-live="polite">
             Showing{' '}
             <span className="font-mono text-neutral-200 font-semibold">
               {filteredAndSortedRepos.length}
@@ -236,9 +236,14 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 id="repo-filter-search"
                 type="text"
                 value={searchQuery}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape' && searchQuery) {
+                    setSearchQuery('');
+                  }
+                }}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search repositories by name or description..."
-                className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-500 pl-10 pr-10 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-emerald-500 text-sm transition"
+                className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-400 pl-10 pr-10 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-neutral-300 focus:ring-2 focus:ring-emerald-500 text-sm transition"
               />
               {searchQuery && (
                 <button
@@ -247,7 +252,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   aria-label="Clear repository search query"
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-200 rounded cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -260,9 +265,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <label htmlFor="repo-language-select" className="sr-only">
                     Filter by primary programming language
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-1 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                    <span className="text-neutral-500">Language:</span>
+                    <span className="text-neutral-400">Language:</span>
                     <select
                       id="repo-language-select"
                       value={selectedLanguage}
@@ -286,9 +291,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <label htmlFor="repo-type-select" className="sr-only">
                     Filter by repository type
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-1 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
                     <Filter className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                    <span className="text-neutral-500">Type:</span>
+                    <span className="text-neutral-400">Type:</span>
                     <select
                       id="repo-type-select"
                       value={filterType}
@@ -316,9 +321,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <label htmlFor="repo-min-stars-select" className="sr-only">
                     Filter by minimum stars
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-1 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
                     <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
-                    <span className="text-neutral-500">Stars:</span>
+                    <span className="text-neutral-400">Stars:</span>
                     <select
                       id="repo-min-stars-select"
                       value={minStars}
@@ -356,9 +361,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 <label htmlFor="repo-sort-select" className="sr-only">
                   Sort repositories
                 </label>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-1 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
                   <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                  <span className="text-neutral-500">Sort:</span>
+                  <span className="text-neutral-400">Sort:</span>
                   <select
                     id="repo-sort-select"
                     value={sortBy}
@@ -429,7 +434,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
             <div
               role="status"
               aria-label="Loading more repositories"
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 motion-safe:animate-pulse"
             >
               {[...Array(2)].map((_, i) => (
                 <div
@@ -463,7 +468,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 {isLoadingMore ? (
                   <>
                     <Loader2
-                      className="w-4 h-4 animate-spin text-emerald-400"
+                      className="w-4 h-4 motion-safe:animate-spin text-emerald-400"
                       aria-hidden="true"
                     />
                     <span>Loading more repositories...</span>
@@ -477,7 +482,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   </>
                 )}
               </button>
-              <div className="text-[11px] text-neutral-500 mt-2 font-mono">
+              <div className="text-[11px] text-neutral-400 mt-2 font-mono">
                 Fetches next 30 repositories via GitHub REST API pagination
               </div>
             </div>
@@ -485,7 +490,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
 
           {/* All Repositories Loaded Indicator */}
           {!hasMore && repos.length > 0 && repos.length >= totalPublicRepos && (
-            <div className="text-center py-4 text-xs text-neutral-500 font-mono">
+            <div className="text-center py-4 text-xs text-neutral-400 font-mono">
               ✓ All {repos.length} public repositories loaded
             </div>
           )}

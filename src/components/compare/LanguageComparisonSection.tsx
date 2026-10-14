@@ -53,7 +53,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
             type="checkbox"
             checked={excludeForks}
             onChange={(e) => onToggleExcludeForks(e.target.checked)}
-            className="rounded border-[#30363d] bg-[#161b22] text-emerald-500 focus:ring-emerald-500/40 cursor-pointer"
+            className="rounded border-[#30363d] bg-[#161b22] text-emerald-500 focus:ring-emerald-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
           />
           <GitFork className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
           <span>Exclude forked repositories</span>
@@ -91,7 +91,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-neutral-500 italic">No overlapping primary languages</p>
+              <p className="text-xs text-neutral-400 italic">No overlapping primary languages</p>
             )}
           </div>
 
@@ -111,7 +111,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-neutral-500 italic">None unique to @{usernameA}</p>
+              <p className="text-xs text-neutral-400 italic">None unique to @{usernameA}</p>
             )}
           </div>
 
@@ -131,7 +131,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-neutral-500 italic">None unique to @{usernameB}</p>
+              <p className="text-xs text-neutral-400 italic">None unique to @{usernameB}</p>
             )}
           </div>
         </div>
@@ -155,7 +155,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
           {languageAnalyticsA && languageAnalyticsA.breakdown.length > 0 ? (
             <LanguageChart data={languageAnalyticsA.breakdown} />
           ) : (
-            <div className="h-56 flex items-center justify-center text-xs text-neutral-500 italic text-center px-4">
+            <div className="h-56 flex items-center justify-center text-xs text-neutral-400 italic text-center px-4">
               {languageAnalyticsA
                 ? `No repositories with a detected primary language for @${usernameA}.`
                 : `Language data unavailable for @${usernameA}.`}
@@ -179,7 +179,7 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
           {languageAnalyticsB && languageAnalyticsB.breakdown.length > 0 ? (
             <LanguageChart data={languageAnalyticsB.breakdown} />
           ) : (
-            <div className="h-56 flex items-center justify-center text-xs text-neutral-500 italic text-center px-4">
+            <div className="h-56 flex items-center justify-center text-xs text-neutral-400 italic text-center px-4">
               {languageAnalyticsB
                 ? `No repositories with a detected primary language for @${usernameB}.`
                 : `Language data unavailable for @${usernameB}.`}
@@ -197,13 +197,38 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
             </span>
             <div className="flex items-center gap-4 font-mono text-[11px]">
               <span className="inline-flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />@{usernameA}
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" aria-hidden="true" />@{usernameA}
               </span>
               <span className="inline-flex items-center gap-1.5 text-sky-400">
-                <span className="w-2.5 h-2.5 rounded-sm bg-sky-500" />@{usernameB}
+                <span className="w-2.5 h-2.5 rounded-sm bg-sky-500" aria-hidden="true" />@{usernameB}
               </span>
             </div>
           </div>
+
+          {/* Screen-reader Accessible Comparison Table */}
+          <table className="sr-only">
+            <caption>Language comparison between @{usernameA} and @{usernameB}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Language</th>
+                <th scope="col">@{usernameA} Repositories</th>
+                <th scope="col">@{usernameA} Share</th>
+                <th scope="col">@{usernameB} Repositories</th>
+                <th scope="col">@{usernameB} Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {languageRows.map((row) => (
+                <tr key={row.language}>
+                  <td>{row.language}</td>
+                  <td>{row.countA}</td>
+                  <td>{row.percentageA}%</td>
+                  <td>{row.countB}</td>
+                  <td>{row.percentageB}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           <div className="space-y-2.5">
             {languageRows.map((row) => (
@@ -237,6 +262,11 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
                     <div
                       className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(100, Math.max(0, row.percentageA))}%` }}
+                      role="progressbar"
+                      aria-valuenow={row.percentageA}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${row.language} represents ${row.percentageA}% of categorized repositories for @${usernameA}`}
                     />
                   </div>
 
@@ -245,6 +275,11 @@ export const LanguageComparisonSection: React.FC<LanguageComparisonSectionProps>
                     <div
                       className="h-full bg-sky-500 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(100, Math.max(0, row.percentageB))}%` }}
+                      role="progressbar"
+                      aria-valuenow={row.percentageB}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${row.language} represents ${row.percentageB}% of categorized repositories for @${usernameB}`}
                     />
                   </div>
                 </div>

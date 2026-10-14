@@ -41,15 +41,17 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, active
         <div className="flex items-center gap-3">
           {rateLimit && (
             <div
+              role="status"
+              aria-label={`GitHub API Rate Limit: ${rateLimit.remaining} of ${rateLimit.limit} remaining`}
               title={`API calls remaining: ${rateLimit.remaining}/${rateLimit.limit}`}
               className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] text-xs font-mono text-neutral-300"
             >
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              <Activity className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
               <span className="hidden sm:inline text-neutral-400">Rate Limit:</span>
               <span className={rateLimit.remaining < 10 ? 'text-amber-400 font-bold' : 'text-neutral-200'}>
                 {rateLimit.remaining}
               </span>
-              <span className="text-neutral-500">/ {rateLimit.limit}</span>
+              <span className="text-neutral-400">/ {rateLimit.limit}</span>
             </div>
           )}
 
@@ -57,9 +59,10 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, active
             href="https://docs.github.com/en/rest"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-neutral-200 hover:bg-[#161b22] border border-transparent hover:border-[#30363d] transition"
+            aria-label="GitHub REST API Documentation (opens in a new tab)"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-300 hover:text-white hover:bg-[#161b22] border border-transparent hover:border-[#30363d] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
             <span>GitHub REST v3</span>
           </a>
         </div>

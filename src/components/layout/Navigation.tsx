@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { NavigationTab } from '../../types/github';
+import { getAriaTabKeyNav } from '../../utils/accessibility';
 
 interface NavigationProps {
   activeTab: NavigationTab;
@@ -56,18 +57,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const tabRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
-    const count = navItems.length;
-    let nextIndex: number | null = null;
-
-    if (e.key === 'ArrowRight') {
-      nextIndex = (currentIndex + 1) % count;
-    } else if (e.key === 'ArrowLeft') {
-      nextIndex = (currentIndex - 1 + count) % count;
-    } else if (e.key === 'Home') {
-      nextIndex = 0;
-    } else if (e.key === 'End') {
-      nextIndex = count - 1;
-    }
+    const nextIndex = getAriaTabKeyNav(e.key, currentIndex, navItems.length);
 
     if (nextIndex !== null) {
       e.preventDefault();

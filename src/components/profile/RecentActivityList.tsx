@@ -51,7 +51,7 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
           <button
             type="button"
             onClick={onViewAllRepos}
-            className="text-xs text-neutral-400 hover:text-emerald-400 flex items-center gap-1 transition cursor-pointer font-medium self-start sm:self-auto"
+            className="text-xs text-neutral-400 hover:text-emerald-400 flex items-center gap-1 transition cursor-pointer font-medium self-start sm:self-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md px-1 py-0.5"
           >
             <span>Buka Repository Explorer</span>
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -89,10 +89,11 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
                           href={repo.html_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all"
+                          aria-label={`Buka ${repo.name} di GitHub (buka di tab baru)`}
+                          className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                         >
                           <span>{repo.name}</span>
-                          <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                          <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
                         </a>
                       )}
 
@@ -108,8 +109,9 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
                     href={repo.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Buka ${repo.name} di GitHub (buka di tab baru)`}
                     title="Buka langsung di GitHub"
-                    className="p-1 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded transition shrink-0"
+                    className="p-1 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded transition shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   >
                     <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                   </a>
@@ -120,29 +122,29 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
                     {repo.description}
                   </p>
                 ) : (
-                  <p className="text-xs text-neutral-500 italic mb-3">Tidak ada deskripsi.</p>
+                  <p className="text-xs text-neutral-400 italic mb-3">Tidak ada deskripsi.</p>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400 pt-3 border-t border-[#21262d]">
                 {repo.language && (
                   <div className="flex items-center gap-1.5 font-medium text-neutral-300">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
                     <span>{repo.language}</span>
                   </div>
                 )}
 
                 <div className="flex items-center gap-1 font-mono text-neutral-300">
-                  <Star className="w-3.5 h-3.5 text-neutral-400" />
+                  <Star className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
                   <span>{repo.stargazers_count.toLocaleString()}</span>
                 </div>
 
                 <div className="flex items-center gap-1 font-mono text-neutral-300">
-                  <GitFork className="w-3.5 h-3.5 text-neutral-400" />
+                  <GitFork className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
                   <span>{repo.forks_count.toLocaleString()}</span>
                 </div>
 
-                <div className="ml-auto text-[11px] font-mono text-neutral-500">
+                <div className="ml-auto text-[11px] font-mono text-neutral-400">
                   Pushed: {pushDate}
                 </div>
               </div>

@@ -398,7 +398,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
             <button
               onClick={handleResetComparison}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-xs font-medium text-neutral-300 hover:text-white border border-[#30363d] transition cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-xs font-medium text-neutral-300 hover:text-white border border-[#30363d] transition cursor-pointer self-start sm:self-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Reset comparison</span>
@@ -416,7 +416,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
                 setInputA(activeUser.login);
                 setValidationError(null);
               }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/30 hover:bg-emerald-950/50 text-emerald-300 border border-emerald-500/30 font-mono text-xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/30 hover:bg-emerald-950/50 text-emerald-300 border border-emerald-500/30 font-mono text-xs transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <span>Use @{activeUser.login} as Developer A</span>
             </button>
@@ -436,13 +436,14 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
               </label>
               <div className="relative">
                 <Search
-                  className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
                   aria-hidden="true"
                 />
                 <input
                   id="compare-user-a"
                   type="text"
                   value={inputA}
+                  aria-invalid={Boolean(validationError)}
                   onChange={(e) => {
                     setInputA(e.target.value);
                     if (validationError) setValidationError(null);
@@ -450,7 +451,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
                   placeholder="e.g. torvalds"
                   autoComplete="off"
                   spellCheck={false}
-                  className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-500 pl-10 pr-4 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-mono transition"
+                  className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-400 pl-10 pr-4 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 text-sm font-mono transition"
                 />
               </div>
             </div>
@@ -462,7 +463,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
                 onClick={handleSwapInputs}
                 aria-label="Swap Developer A and Developer B usernames"
                 title="Swap Developer A and Developer B"
-                className="p-2.5 rounded-lg bg-[#0d1117] hover:bg-[#21262d] text-neutral-400 hover:text-neutral-200 border border-[#30363d] transition cursor-pointer"
+                className="p-2.5 rounded-lg bg-[#0d1117] hover:bg-[#21262d] text-neutral-400 hover:text-neutral-200 border border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 <ArrowLeftRight className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -478,13 +479,14 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
               </label>
               <div className="relative">
                 <Search
-                  className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
                   aria-hidden="true"
                 />
                 <input
                   id="compare-user-b"
                   type="text"
                   value={inputB}
+                  aria-invalid={Boolean(validationError)}
                   onChange={(e) => {
                     setInputB(e.target.value);
                     if (validationError) setValidationError(null);
@@ -492,7 +494,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
                   placeholder="e.g. gvanrossum"
                   autoComplete="off"
                   spellCheck={false}
-                  className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-500 pl-10 pr-4 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-sm font-mono transition"
+                  className="w-full bg-[#0d1117] text-neutral-100 placeholder-neutral-400 pl-10 pr-4 py-2.5 rounded-lg border border-[#30363d] focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/50 text-sm font-mono transition"
                 />
               </div>
             </div>
@@ -501,11 +503,11 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
             <button
               type="submit"
               disabled={isComparing}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
             >
               {isComparing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="w-4 h-4 motion-safe:animate-spin" aria-hidden="true" />
                   <span>Comparing...</span>
                 </>
               ) : (
@@ -561,12 +563,12 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
                   key={pair.label}
                   type="button"
                   onClick={() => handleSelectExample(pair.userA, pair.userB)}
-                  className="px-3.5 py-2 rounded-lg bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] text-left transition cursor-pointer group"
+                  className="px-3.5 py-2 rounded-lg bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] text-left transition cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   <div className="text-xs font-mono font-semibold text-neutral-200 group-hover:text-emerald-400 transition">
-                    @{pair.userA} <span className="text-neutral-500">vs</span> @{pair.userB}
+                    @{pair.userA} <span className="text-neutral-400">vs</span> @{pair.userB}
                   </div>
-                  <div className="text-[11px] text-neutral-500">{pair.note}</div>
+                  <div className="text-[11px] text-neutral-400">{pair.note}</div>
                 </button>
               ))}
             </div>

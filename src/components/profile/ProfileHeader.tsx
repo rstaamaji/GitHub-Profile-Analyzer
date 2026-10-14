@@ -27,7 +27,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
         <div className="relative shrink-0">
           <img
             src={user.avatar_url}
-            alt={`${user.login}'s avatar`}
+            alt={`${user.name || user.login}'s profile picture`}
             className="w-24 h-24 md:w-28 md:h-28 rounded-full border-2 border-[#30363d] bg-[#21262d] object-cover"
           />
           {user.hireable && (
@@ -51,10 +51,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
               href={user.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 transition"
+              aria-label={`Open ${user.login}'s GitHub profile in a new tab`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <span>GitHub Profile</span>
-              <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
             </a>
           </div>
 
@@ -65,27 +66,28 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
           )}
 
           {/* Metadata badges */}
-          <div className="flex flex-wrap gap-y-2 gap-x-4 text-xs text-neutral-400 pt-2 border-t border-[#21262d]">
+          <div className="flex flex-wrap gap-y-2 gap-x-4 text-xs text-neutral-300 pt-2 border-t border-[#21262d]">
             {user.company && (
               <div className="flex items-center gap-1.5">
-                <Building className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                 <span className="truncate max-w-[200px]">{user.company}</span>
               </div>
             )}
             {user.location && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                 <span>{user.location}</span>
               </div>
             )}
             {user.blog && (
               <div className="flex items-center gap-1.5">
-                <LinkIcon className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <LinkIcon className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                 <a
                   href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[220px]"
+                  aria-label={`${user.login}'s website (opens in a new tab)`}
+                  className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[220px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   {user.blog.replace(/^https?:\/\//, '')}
                 </a>
@@ -93,20 +95,21 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
             )}
             {user.twitter_username && (
               <div className="flex items-center gap-1.5">
-                <AtSign className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <AtSign className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                 <a
                   href={`https://twitter.com/${user.twitter_username}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-blue-400"
+                  aria-label={`@${user.twitter_username} on Twitter / X (opens in a new tab)`}
+                  className="hover:text-blue-400 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   @{user.twitter_username}
                 </a>
               </div>
             )}
 
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+            <div className="flex items-center gap-1.5 text-neutral-400">
+              <Calendar className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
               <span>Joined {memberSince}</span>
             </div>
           </div>

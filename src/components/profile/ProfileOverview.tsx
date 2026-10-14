@@ -81,7 +81,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-100 transition disabled:opacity-50 cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isLoadingMore ? 'animate-spin text-emerald-400' : ''}`}
+                className={`w-3.5 h-3.5 ${isLoadingMore ? 'motion-safe:animate-spin text-emerald-400' : ''}`}
                 aria-hidden="true"
               />
               <span>{isLoadingMore ? 'Retrying...' : 'Retry loading repos'}</span>
@@ -117,7 +117,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
             >
               {isLoadingMore ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" aria-hidden="true" />
+                  <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin text-emerald-400" aria-hidden="true" />
                   <span>Memuat batch...</span>
                 </>
               ) : (
@@ -193,7 +193,8 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
               href={user.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition"
+              aria-label={`Open ${user.login}'s profile on GitHub (opens in a new tab)`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <span>Open @{user.login} on GitHub</span>
               <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />

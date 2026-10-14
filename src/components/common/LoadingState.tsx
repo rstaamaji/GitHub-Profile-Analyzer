@@ -13,11 +13,11 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="w-full max-w-5xl mx-auto space-y-8 animate-pulse"
+      className="w-full max-w-5xl mx-auto space-y-8 motion-safe:animate-pulse"
     >
       {/* Status Banner */}
       <div className="flex items-center justify-center gap-2.5 py-2 px-4 rounded-xl bg-[#161b22] border border-[#30363d] text-neutral-300 text-xs sm:text-sm font-medium">
-        <Loader2 className="w-4 h-4 animate-spin text-emerald-400 shrink-0" aria-hidden="true" />
+        <Loader2 className="w-4 h-4 motion-safe:animate-spin text-emerald-400 shrink-0" aria-hidden="true" />
         <span>{message}</span>
       </div>
 

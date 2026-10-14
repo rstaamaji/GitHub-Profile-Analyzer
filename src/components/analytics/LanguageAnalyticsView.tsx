@@ -66,7 +66,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
             type="checkbox"
             checked={excludeForks}
             onChange={(e) => setExcludeForks(e.target.checked)}
-            className="rounded border-[#30363d] bg-[#0d1117] text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+            className="rounded border-[#30363d] bg-[#0d1117] text-emerald-500 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
           />
         </div>
       </div>
@@ -93,16 +93,16 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
               onClick={onFetchMoreRepos}
               disabled={isLoadingMore}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition disabled:opacity-50 cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               {isLoadingMore ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin text-emerald-400" aria-hidden="true" />
                   <span>Loading batch...</span>
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
                   <span>Load more to refine</span>
                 </>
               )}
@@ -131,7 +131,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.totalAnalyzed.toLocaleString()}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             {excludeForks ? `${analytics.forksExcludedCount} forks omitted` : 'Including forked repos'}
           </div>
         </div>
@@ -144,7 +144,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.distinctLanguagesCount}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             Detected primary tags
           </div>
         </div>
@@ -157,7 +157,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
           <div className="text-xl font-bold font-mono text-neutral-100 truncate">
             {analytics.topLanguage ? analytics.topLanguage.language : 'None'}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             {analytics.topLanguage
               ? `${analytics.topLanguage.percentage}% of categorized repos`
               : 'No primary languages'}
@@ -172,7 +172,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-neutral-100">
             {analytics.totalWithoutLanguage.toLocaleString()}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
+          <div className="text-[11px] text-neutral-400 mt-1">
             Markdown, config, or assets
           </div>
         </div>
@@ -198,10 +198,33 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
               <h3 className="text-sm font-semibold text-neutral-200">
                 Ranked Language Breakdown
               </h3>
-              <span className="text-xs text-neutral-500 font-mono">
+              <span className="text-xs text-neutral-400 font-mono">
                 {analytics.totalWithLanguage} categorized repos
               </span>
             </div>
+
+            {/* Screen-reader Accessible Data Table */}
+            <table className="sr-only">
+              <caption>Programming language distribution for @{username}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Language</th>
+                  <th scope="col">Repository Count</th>
+                  <th scope="col">Percentage Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.breakdown.map((item, idx) => (
+                  <tr key={item.language}>
+                    <td>{idx + 1}</td>
+                    <td>{item.language}</td>
+                    <td>{item.count}</td>
+                    <td>{item.percentage}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             <div className="space-y-3" role="list" aria-label="Programming language rankings">
               {analytics.breakdown.map((item, idx) => (
@@ -211,7 +234,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
                 >
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="text-neutral-500 font-mono w-4">#{idx + 1}</span>
+                      <span className="text-neutral-400 font-mono w-4">#{idx + 1}</span>
                       <span
                         className="w-2.5 h-2.5 rounded-full"
                         style={{ backgroundColor: item.color }}
@@ -248,7 +271,7 @@ export const LanguageAnalyticsView: React.FC<LanguageAnalyticsViewProps> = ({
             </div>
 
             {/* Note clarifying metric semantics */}
-            <div className="text-[11px] text-neutral-500 pt-2 border-t border-[#21262d] leading-relaxed">
+            <div className="text-[11px] text-neutral-400 pt-2 border-t border-[#21262d] leading-relaxed">
               * Note: Percentages represent the proportion of repositories where a language is designated as the primary language by GitHub, distinct from source code byte volume.
             </div>
           </div>

@@ -86,15 +86,16 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo, onSelectRepo }) => {
             </div>
           </div>
 
-          {/* Fork / Archived Badges */}
+            {/* Fork / Archived Badges */}
           <div className="flex items-center gap-1.5 shrink-0">
             {onSelectRepo && (
               <a
                 href={repo.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Open ${repo.name} on GitHub (opens in a new tab)`}
                 title="Open on GitHub"
-                className="p-1 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded transition"
+                className="p-1 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
               </a>
@@ -202,13 +203,13 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo, onSelectRepo }) => {
             title={`License: ${repo.license.name}`}
             className="hidden sm:flex items-center gap-1 text-neutral-400 truncate max-w-[120px]"
           >
-            <Scale className="w-3.5 h-3.5 text-neutral-500 shrink-0" aria-hidden="true" />
+            <Scale className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
             <span className="truncate">{repo.license.spdx_id || repo.license.name}</span>
           </div>
         )}
 
         {/* Last updated */}
-        <div className="ml-auto text-[11px] text-neutral-500">Updated {updatedDate}</div>
+        <div className="ml-auto text-[11px] text-neutral-400">Updated {updatedDate}</div>
       </div>
     </article>
   );

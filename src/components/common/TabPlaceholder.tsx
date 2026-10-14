@@ -21,7 +21,7 @@ export const TabPlaceholder: React.FC<TabPlaceholderProps> = ({
   return (
     <section
       aria-labelledby="tab-placeholder-heading"
-      className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-10 rounded-xl bg-[#161b22] border border-[#30363d] shadow-sm animate-in fade-in duration-200"
+      className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-10 rounded-xl bg-[#161b22] border border-[#30363d] shadow-sm motion-safe:animate-in motion-safe:fade-in duration-200"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#30363d]">
         <div className="flex items-center gap-4">
