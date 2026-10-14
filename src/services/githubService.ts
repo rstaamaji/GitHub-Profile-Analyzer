@@ -802,7 +802,7 @@ export class GitHubService {
           const data: ReadmeData = {
             content: decodedContent,
             html_url: String(raw.html_url ?? ''),
-            download_url: raw.download_url ? String(raw.download_url) : null,
+            download_url: raw.download_url ? String(raw.download_url) : undefined,
             name: String(raw.name ?? 'README.md'),
             path: String(raw.path ?? 'README.md'),
             size: typeof raw.size === 'number' ? raw.size : decodedContent.length,
