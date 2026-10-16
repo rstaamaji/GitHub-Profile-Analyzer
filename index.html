@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- ─── Character encoding & Viewport ─────────────────────────────── -->
+    <!-- ─── Character encoding & Viewport ──────────────────────────────────── -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- ─── Primary Metadata ──────────────────────────────────────────── -->
+    <!-- ─── Primary Metadata ───────────────────────────────────────────────── -->
     <title>GitHub Profile Analyzer | Developer Intelligence</title>
     <meta
       name="description"
@@ -14,34 +14,65 @@
     <meta name="author" content="GitHub Profile Analyzer" />
     <meta
       name="keywords"
-      content="GitHub, profile analyzer, developer analytics, repository explorer, language statistics, open source, GitHub API"
+      content="GitHub, profile analyzer, developer analytics, repository explorer, language statistics, open source, GitHub API, code stats, developer tools"
     />
-
-    <!-- ─── Theme & Browser Color ─────────────────────────────────────── -->
     <!--
-      theme-color is used by mobile browsers (Chrome on Android, Safari on iOS)
-      to color the browser UI chrome. Matches the app's dark background.
+      canonical: Set this to the actual deployment URL after publishing.
+      Without a canonical URL, search engines may create duplicate entries
+      if the app is accessible via multiple domains or paths.
+
+      Uncomment and update after deployment:
+      <link rel="canonical" href="https://YOUR_DOMAIN/" />
+    -->
+
+    <!-- ─── Theme & Browser Color ───────────────────────────────────────────── -->
+    <!--
+      theme-color colors the browser UI chrome on mobile (Chrome on Android,
+      Samsung Internet). Matches the app's dark background (#0d1117).
     -->
     <meta name="theme-color" content="#0d1117" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- ─── Favicon & Icons ───────────────────────────────────────────── -->
+    <!-- ─── Favicon, Icons & Web App Manifest ──────────────────────────────── -->
     <!--
-      favicon.svg is available at public/favicon.svg (Antigravity icon).
-      No PNG favicon or apple-touch-icon is currently available.
-      To add a proper favicon set, generate PNG variants from favicon.svg
-      using a tool like https://realfavicongenerator.net and place them in /public.
+      favicon.svg — SVG favicon supported by all modern browsers.
+      site.webmanifest — enables "Add to Home Screen" on Android/iOS and
+        provides installable PWA metadata (name, theme_color, icons).
+      browserconfig.xml — Windows/Edge tile metadata.
+      No PNG favicon is currently available. To generate a complete favicon set,
+      export favicon.svg using https://realfavicongenerator.net and add the
+      generated files to /public.
     -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="msapplication-TileColor" content="#0d1117" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
 
-    <!-- ─── Open Graph (Facebook, LinkedIn, Discord, WhatsApp) ───────── -->
+    <!-- ─── Performance: Preconnect & DNS-prefetch ─────────────────────────── -->
     <!--
-      og:url and og:image require an absolute URL after deployment.
-      Replace YOUR_DOMAIN below with the actual deployment URL before publishing.
+      Preconnect establishes early TCP/TLS connections to the GitHub API origin
+      before the first JS fetch fires. Reduces time-to-first-byte for API calls.
+      dns-prefetch is a lighter fallback for browsers that don't support preconnect.
+    -->
+    <link rel="preconnect" href="https://api.github.com" />
+    <link rel="dns-prefetch" href="https://api.github.com" />
+    <link rel="preconnect" href="https://avatars.githubusercontent.com" />
+    <link rel="dns-prefetch" href="https://avatars.githubusercontent.com" />
 
-      og:image note: SVG is not supported by most social crawlers.
-      A 1200×630 PNG screenshot should replace og:image once available.
-      See: public/og-image.svg for a placeholder that can be exported to PNG.
+    <!-- ─── Open Graph (Facebook, LinkedIn, Discord, WhatsApp) ─────────────── -->
+    <!--
+      og:url and og:image require absolute URLs — they cannot use relative paths.
+      og:image must be a raster format (JPEG or PNG, 1200×630 recommended).
+      SVG is not rendered by Facebook, Twitter, LinkedIn, or WhatsApp crawlers.
+
+      A 1200×630 PNG export of public/og-image.svg should be generated and hosted
+      at /og-preview.png before enabling og:image and twitter:image below.
+
+      Steps to complete after deployment:
+        1. Export public/og-image.svg → PNG (1200×630) using a browser or tool.
+        2. Copy the PNG to public/og-preview.png.
+        3. Uncomment and replace YOUR_DOMAIN in the tags below.
+        4. Validate with: https://developers.facebook.com/tools/debug/
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="GitHub Profile Analyzer" />
@@ -50,19 +81,23 @@
       property="og:description"
       content="Inspect and compare public GitHub developer profiles. Explore repositories, language analytics, activity charts, and side-by-side profile comparison — all powered by the GitHub REST API."
     />
+    <meta property="og:locale" content="en_US" />
     <!--
       Uncomment and update after deployment:
       <meta property="og:url" content="https://YOUR_DOMAIN/" />
       <meta property="og:image" content="https://YOUR_DOMAIN/og-preview.png" />
+      <meta property="og:image:secure_url" content="https://YOUR_DOMAIN/og-preview.png" />
+      <meta property="og:image:type" content="image/png" />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="GitHub Profile Analyzer — developer intelligence dashboard" />
     -->
 
-    <!-- ─── Twitter / X Card ──────────────────────────────────────────── -->
+    <!-- ─── Twitter / X Card ────────────────────────────────────────────────── -->
     <!--
-      summary_large_image requires a public og:image URL to render.
-      Falls back gracefully to summary card if no image is set.
+      twitter:card falls back to "summary" (small icon + text) when no image is set.
+      Change to "summary_large_image" once og:image is available and hosted.
+      Validate with: https://cards-dev.twitter.com/validator
     -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="GitHub Profile Analyzer | Developer Intelligence" />
@@ -73,26 +108,34 @@
     <!--
       Uncomment and update after deployment:
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@YOUR_TWITTER_HANDLE" />
+      <meta name="twitter:creator" content="@YOUR_TWITTER_HANDLE" />
       <meta name="twitter:image" content="https://YOUR_DOMAIN/og-preview.png" />
       <meta name="twitter:image:alt" content="GitHub Profile Analyzer — developer intelligence dashboard" />
     -->
 
-    <!-- ─── SPA / Crawler Notes ───────────────────────────────────────── -->
+    <!-- ─── SPA & Crawler Notes ─────────────────────────────────────────────── -->
     <!--
-      This is a client-side SPA (React + Vite). All metadata above is static
-      and applies to every route. Individual profile pages (e.g. /user/torvalds)
-      do NOT receive unique per-page metadata unless server-side rendering (SSR)
-      or a meta-tag management library (e.g. react-helmet-async) is added.
+      IMPORTANT — SPA SEO Limitations:
+      This application is a client-side SPA (React + Vite). All metadata above is
+      STATIC and applies identically to every URL the app handles. Individual
+      profile URLs (e.g., /#torvalds or /compare) do NOT receive unique per-page
+      metadata that social crawlers can read, because those crawlers do not execute
+      JavaScript.
 
-      Googlebot can index JavaScript-rendered SPAs with delayed crawling,
-      but social crawlers (Facebook, Twitter) typically cannot execute JS and
-      will only read the static metadata defined here.
+      Googlebot indexes JavaScript-rendered SPAs via "delayed crawling" but this
+      can take days or weeks. Social sharing crawlers (Facebook, Twitter, LinkedIn,
+      WhatsApp) read only the static HTML above.
 
-      Recommended post-deployment steps:
-        1. Replace YOUR_DOMAIN in og:url and og:image with the real domain.
-        2. Export public/og-image.svg to a 1200×630 PNG and host it.
-        3. Submit the URL to Google Search Console for indexing.
-        4. Consider adding a robots.txt and sitemap.xml once the domain is known.
+      Recommended post-deployment checklist:
+        1. Replace YOUR_DOMAIN with the actual domain in og:url and og:image.
+        2. Export public/og-image.svg to a 1200×630 PNG → public/og-preview.png.
+        3. Uncomment twitter:card summary_large_image and og:image tags.
+        4. Add <link rel="canonical" href="https://YOUR_DOMAIN/" /> above.
+        5. Add a Sitemap URL to public/robots.txt.
+        6. Submit the site to Google Search Console for indexing.
+        7. Validate OG tags: https://developers.facebook.com/tools/debug/
+        8. Validate Twitter card: https://cards-dev.twitter.com/validator
     -->
   </head>
   <body>
