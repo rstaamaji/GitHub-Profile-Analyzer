@@ -258,21 +258,21 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
             </div>
 
             {/* Filter Controls Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 pt-1">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Language Dropdown */}
                 <div className="relative">
                   <label htmlFor="repo-language-select" className="sr-only">
                     Filter by primary programming language
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                    <span className="text-neutral-400">Language:</span>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Language:</span>
                     <select
                       id="repo-language-select"
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1 max-w-[120px] sm:max-w-none"
                     >
                       <option value="all" className="bg-[#161b22] text-neutral-200">
                         All Languages ({repos.length})
@@ -291,9 +291,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <label htmlFor="repo-type-select" className="sr-only">
                     Filter by repository type
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
-                    <Filter className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                    <span className="text-neutral-400">Type:</span>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <Filter className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Type:</span>
                     <select
                       id="repo-type-select"
                       value={filterType}
@@ -321,9 +321,9 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <label htmlFor="repo-min-stars-select" className="sr-only">
                     Filter by minimum stars
                   </label>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
-                    <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
-                    <span className="text-neutral-400">Stars:</span>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <Star className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Stars:</span>
                     <select
                       id="repo-min-stars-select"
                       value={minStars}
@@ -348,7 +348,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <button
                     onClick={resetFilters}
                     type="button"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] border border-transparent hover:border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[38px] rounded-lg text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] border border-transparent hover:border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Reset filters</span>
@@ -357,13 +357,13 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
               </div>
 
               {/* Sort By Dropdown */}
-              <div className="relative ml-auto">
+              <div className="relative self-start sm:self-auto sm:ml-auto">
                 <label htmlFor="repo-sort-select" className="sr-only">
                   Sort repositories
                 </label>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                  <span className="text-neutral-400">Sort:</span>
+                <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
+                  <span className="text-neutral-400 hidden sm:inline">Sort:</span>
                   <select
                     id="repo-sort-select"
                     value={sortBy}
@@ -391,6 +391,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   </select>
                 </div>
               </div>
+
             </div>
           </div>
 

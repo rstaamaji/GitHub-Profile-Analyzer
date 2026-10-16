@@ -243,7 +243,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   // Loading State while fetching metadata
   if (isLoadingRepo && !repo) {
     return (
-      <div className="w-full max-w-4xl mx-auto py-12 px-4 space-y-6 animate-pulse">
+      <div className="w-full max-w-4xl mx-auto py-12 px-4 space-y-6 motion-safe:animate-pulse">
         <div className="h-6 bg-[#21262d] rounded w-36 mb-4" />
         <div className="p-8 rounded-xl bg-[#161b22] border border-[#30363d] space-y-4">
           <div className="h-8 bg-[#21262d] rounded w-1/3" />
@@ -273,7 +273,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   });
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-200">
+    <div className="w-full max-w-5xl mx-auto space-y-8 motion-safe:animate-in motion-safe:fade-in duration-200">
       {/* Top Breadcrumb & Return Action */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button

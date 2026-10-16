@@ -44,7 +44,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* 1. Most Starred Repository */}
         <div className="p-5 rounded-xl bg-[#161b22] border border-[#30363d] flex flex-col justify-between hover:border-[#8b949e]/40 transition">
           <div>
