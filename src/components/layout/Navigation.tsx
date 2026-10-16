@@ -77,7 +77,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div
           role="tablist"
           aria-orientation="horizontal"
-          className="flex items-center gap-1 sm:gap-2 -mb-px overflow-x-auto no-scrollbar py-2 sm:py-0"
+          className="flex items-center gap-1 sm:gap-2 -mb-px overflow-x-auto no-scrollbar scroll-smooth touch-pan-x py-1 sm:py-0"
         >
           {navItems.map((item, idx) => {
             const Icon = item.icon;
@@ -97,7 +97,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={() => onTabChange(item.id)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
                 type="button"
-                className={`group inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm font-medium border-b-2 transition-colors cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] rounded-t-md ${
+                className={`group inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3.5 min-h-[44px] text-xs sm:text-sm font-medium border-b-2 transition-colors cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] rounded-t-md ${
                   isActive
                     ? 'border-emerald-500 text-neutral-100 bg-[#161b22]/40'
                     : 'border-transparent text-neutral-400 hover:text-neutral-200 hover:border-[#30363d] hover:bg-[#161b22]/20'

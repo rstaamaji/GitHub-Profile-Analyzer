@@ -99,9 +99,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               setUsername(e.target.value);
               if (emptyHint) setEmptyHint(null);
             }}
-            placeholder="Search GitHub username (e.g. torvalds, vercel, shadcn)..."
+            placeholder="Search GitHub username..."
             disabled={isLoading}
-            className={`w-full bg-[#161b22] text-neutral-100 placeholder-neutral-400 pl-12 pr-28 sm:pr-36 py-3.5 rounded-xl border focus:outline-none focus:ring-2 text-sm sm:text-base font-normal transition duration-150 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed ${
+            className={`w-full bg-[#161b22] text-neutral-100 placeholder-neutral-400 pl-11 sm:pl-12 pr-28 sm:pr-36 py-3 sm:py-3.5 rounded-xl border focus:outline-none focus:ring-2 text-sm sm:text-base font-normal transition duration-150 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed ${
               emptyHint
                 ? 'border-amber-500/60 focus:border-amber-400 focus:ring-amber-500/30'
                 : 'border-[#30363d] focus:border-neutral-400 focus:ring-emerald-500/40'
@@ -109,13 +109,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           />
 
           {/* Action buttons on the right */}
-          <div className="absolute right-2 flex items-center gap-1.5">
+          <div className="absolute right-1.5 sm:right-2 flex items-center gap-1 sm:gap-1.5">
             {username && !isLoading && (
               <button
                 type="button"
                 onClick={handleClear}
                 aria-label="Clear username input"
-                className="p-1.5 text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded-lg transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] rounded-lg transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -125,7 +125,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               type="submit"
               disabled={isLoading}
               aria-label="Analyze GitHub Profile"
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[#238636] hover:bg-[#2ea043] active:bg-[#238636] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold rounded-lg transition duration-150 cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
+              className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 min-h-[38px] sm:min-h-[40px] bg-[#238636] hover:bg-[#2ea043] active:bg-[#238636] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold rounded-lg transition duration-150 cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
             >
               {isLoading ? (
                 <>
@@ -157,9 +157,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {/* Input helper & keyboard shortcut note */}
         <div
           id="search-helper-note"
-          className="mt-2.5 px-1 flex items-center justify-between text-xs text-neutral-400"
+          className="mt-2.5 px-1 flex flex-wrap items-center justify-between gap-1 text-xs text-neutral-400"
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span>Direct GitHub REST v3 queries</span>
             {hasActiveData && (
               <span className="text-emerald-400 font-mono text-[11px]">• Profile active</span>

@@ -16,19 +16,19 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, active
           onClick={onResetToHome}
           type="button"
           aria-label="GitHub Profile Analyzer Home"
-          className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 rounded-lg p-1 cursor-pointer group transition"
+          className="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80 rounded-lg p-1 cursor-pointer group transition min-w-0"
         >
-          <div className="w-8 h-8 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center text-white group-hover:border-[#8b949e] transition">
+          <div className="w-8 h-8 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center text-white group-hover:border-[#8b949e] transition shrink-0">
             <Terminal className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           </div>
-          <div>
-            <div className="text-sm font-bold tracking-tight text-neutral-100 flex items-center gap-1.5">
-              <span>GitHub Profile Analyzer</span>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 bg-[#21262d] text-emerald-400 border border-emerald-500/30 rounded">
+          <div className="min-w-0">
+            <div className="text-xs sm:text-sm font-bold tracking-tight text-neutral-100 flex items-center gap-1.5 truncate">
+              <span className="truncate">GitHub Profile Analyzer</span>
+              <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 bg-[#21262d] text-emerald-400 border border-emerald-500/30 rounded shrink-0 hidden sm:inline">
                 v1.0
               </span>
             </div>
-            <div className="text-[11px] text-neutral-500 hidden sm:block">
+            <div className="text-[11px] text-neutral-500 hidden sm:block truncate">
               {activeUsername ? (
                 <span className="text-neutral-400 font-mono">Analyzing @{activeUsername}</span>
               ) : (

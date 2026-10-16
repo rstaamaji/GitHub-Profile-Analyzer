@@ -48,7 +48,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
   }, [user, repos]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
+    <div className="w-full max-w-5xl mx-auto space-y-6 sm:space-y-8 motion-safe:animate-in motion-safe:fade-in duration-300">
       {/* 1. Profile Summary Card */}
       <ProfileHeader user={user} />
 
@@ -132,7 +132,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
       )}
 
       {/* 4. Primary Key Statistics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         <StatCard
           label="Public Repos"
           value={user.public_repos}
