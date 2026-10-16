@@ -1,0 +1,18 @@
+# robots.txt for GitHub Profile Analyzer
+#
+# This is a client-side SPA (React + Vite).
+# All content is dynamically rendered; there are no static profile pages
+# that benefit from selective crawling rules.
+#
+# NOTE: Update the Sitemap URL below after deployment.
+# Replace YOUR_DOMAIN with the actual deployment domain.
+#
+# Example after deployment:
+#   Sitemap: https://YOUR_DOMAIN/sitemap.xml
+
+User-agent: *
+Allow: /
+
+# Disallow the Vite build artifacts directory from being exposed
+# (dist/ should not be served directly in production deployment)
+Disallow: /dist/
