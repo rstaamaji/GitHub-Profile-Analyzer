@@ -1,11 +1,99 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- ─── Character encoding & Viewport ─────────────────────────────── -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Professional developer analytics and GitHub profile inspector powered by the GitHub REST API." />
+
+    <!-- ─── Primary Metadata ──────────────────────────────────────────── -->
     <title>GitHub Profile Analyzer | Developer Intelligence</title>
+    <meta
+      name="description"
+      content="Inspect and compare public GitHub developer profiles. Explore repositories, language analytics, activity charts, and side-by-side profile comparison — all powered by the GitHub REST API."
+    />
+    <meta name="author" content="GitHub Profile Analyzer" />
+    <meta
+      name="keywords"
+      content="GitHub, profile analyzer, developer analytics, repository explorer, language statistics, open source, GitHub API"
+    />
+
+    <!-- ─── Theme & Browser Color ─────────────────────────────────────── -->
+    <!--
+      theme-color is used by mobile browsers (Chrome on Android, Safari on iOS)
+      to color the browser UI chrome. Matches the app's dark background.
+    -->
+    <meta name="theme-color" content="#0d1117" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- ─── Favicon & Icons ───────────────────────────────────────────── -->
+    <!--
+      favicon.svg is available at public/favicon.svg (Antigravity icon).
+      No PNG favicon or apple-touch-icon is currently available.
+      To add a proper favicon set, generate PNG variants from favicon.svg
+      using a tool like https://realfavicongenerator.net and place them in /public.
+    -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- ─── Open Graph (Facebook, LinkedIn, Discord, WhatsApp) ───────── -->
+    <!--
+      og:url and og:image require an absolute URL after deployment.
+      Replace YOUR_DOMAIN below with the actual deployment URL before publishing.
+
+      og:image note: SVG is not supported by most social crawlers.
+      A 1200×630 PNG screenshot should replace og:image once available.
+      See: public/og-image.svg for a placeholder that can be exported to PNG.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GitHub Profile Analyzer" />
+    <meta property="og:title" content="GitHub Profile Analyzer | Developer Intelligence" />
+    <meta
+      property="og:description"
+      content="Inspect and compare public GitHub developer profiles. Explore repositories, language analytics, activity charts, and side-by-side profile comparison — all powered by the GitHub REST API."
+    />
+    <!--
+      Uncomment and update after deployment:
+      <meta property="og:url" content="https://YOUR_DOMAIN/" />
+      <meta property="og:image" content="https://YOUR_DOMAIN/og-preview.png" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content="GitHub Profile Analyzer — developer intelligence dashboard" />
+    -->
+
+    <!-- ─── Twitter / X Card ──────────────────────────────────────────── -->
+    <!--
+      summary_large_image requires a public og:image URL to render.
+      Falls back gracefully to summary card if no image is set.
+    -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="GitHub Profile Analyzer | Developer Intelligence" />
+    <meta
+      name="twitter:description"
+      content="Inspect and compare public GitHub developer profiles. Explore repositories, language analytics, activity charts, and side-by-side profile comparison — powered by the GitHub REST API."
+    />
+    <!--
+      Uncomment and update after deployment:
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="https://YOUR_DOMAIN/og-preview.png" />
+      <meta name="twitter:image:alt" content="GitHub Profile Analyzer — developer intelligence dashboard" />
+    -->
+
+    <!-- ─── SPA / Crawler Notes ───────────────────────────────────────── -->
+    <!--
+      This is a client-side SPA (React + Vite). All metadata above is static
+      and applies to every route. Individual profile pages (e.g. /user/torvalds)
+      do NOT receive unique per-page metadata unless server-side rendering (SSR)
+      or a meta-tag management library (e.g. react-helmet-async) is added.
+
+      Googlebot can index JavaScript-rendered SPAs with delayed crawling,
+      but social crawlers (Facebook, Twitter) typically cannot execute JS and
+      will only read the static metadata defined here.
+
+      Recommended post-deployment steps:
+        1. Replace YOUR_DOMAIN in og:url and og:image with the real domain.
+        2. Export public/og-image.svg to a 1200×630 PNG and host it.
+        3. Submit the URL to Google Search Console for indexing.
+        4. Consider adding a robots.txt and sitemap.xml once the domain is known.
+    -->
   </head>
   <body>
     <div id="root"></div>

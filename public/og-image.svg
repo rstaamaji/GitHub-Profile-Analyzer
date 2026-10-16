@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="210" x2="1200" y2="210" stroke="#161b22" stroke-width="1"/>
+  <line x1="0" y1="420" x2="1200" y2="420" stroke="#161b22" stroke-width="1"/>
+  <line x1="400" y1="0" x2="400" y2="630" stroke="#161b22" stroke-width="1"/>
+  <line x1="800" y1="0" x2="800" y2="630" stroke="#161b22" stroke-width="1"/>
+  <!-- Accent glow top-left -->
+  <ellipse cx="100" cy="100" rx="200" ry="200" fill="#238636" opacity="0.08"/>
+  <!-- Accent glow bottom-right -->
+  <ellipse cx="1100" cy="530" rx="220" ry="220" fill="#58a6ff" opacity="0.07"/>
+  <!-- Terminal icon background circle -->
+  <rect x="540" y="195" width="120" height="120" rx="20" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <!-- Terminal icon (simplified) -->
+  <polyline points="565,245 590,262 565,279" stroke="#22c55e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="600" y1="279" x2="635" y2="279" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+  <!-- App name -->
+  <text x="600" y="360" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" fill="#f0f6fc" text-anchor="middle" letter-spacing="-1">GitHub Profile Analyzer</text>
+  <!-- Tagline -->
+  <text x="600" y="410" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" fill="#8b949e" text-anchor="middle">Public developer analytics powered by GitHub REST API</text>
+  <!-- Bottom bar -->
+  <rect x="0" y="590" width="1200" height="40" fill="#161b22"/>
+  <text x="600" y="616" font-family="ui-monospace, SFMono-Regular, monospace" font-size="16" fill="#30363d" text-anchor="middle">React 19 · TypeScript · Vite 8 · Tailwind CSS v4</text>
+</svg>
