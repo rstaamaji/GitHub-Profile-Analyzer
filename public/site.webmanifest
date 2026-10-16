@@ -1,0 +1,19 @@
+{
+  "name": "GitHub Profile Analyzer",
+  "short_name": "Profile Analyzer",
+  "description": "Inspect and compare public GitHub developer profiles. Explore repositories, language analytics, and activity charts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer tools", "productivity", "utilities"],
+  "lang": "en"
+}
