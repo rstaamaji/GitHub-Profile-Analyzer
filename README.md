@@ -260,6 +260,20 @@ Recharts (the charting library) contributes most of the bundle. This is a known 
 
 ---
 
+## Security & Privacy
+
+This application is built with security-conscious defaults for client-side open-source intelligence:
+
+- **Zero Client-Side Secrets**: All GitHub REST API calls target public endpoints without embedding Personal Access Tokens (PATs) or private credentials into browser bundles.
+- **Dependency Audit Clean**: Continually validated via `npm audit` with **0 known vulnerabilities** across both direct and transitive dependencies.
+- **Automated Security in CI**: Every PR and push to `main` executes `npm audit --audit-level=high` before testing and compilation.
+- **XSS & Content Sanitization**:
+  - Repository README markdown is strictly sanitized via [DOMPurify](https://github.com/cure53/DOMPurify) with forbidden script/object tags, blocked inline event handlers, and restricted URI schemes.
+  - External user website and blog URLs from GitHub profiles are parsed and validated to block dangerous schemes (`javascript:`, `data:`, `vbscript:`, `file:`).
+- **Username Input Constraints**: Search inputs are sanitized to enforce GitHub naming conventions, rejecting malformed, injected, or out-of-spec queries.
+
+---
+
 ## Contributing
 
 Contributions are welcome. To contribute:
