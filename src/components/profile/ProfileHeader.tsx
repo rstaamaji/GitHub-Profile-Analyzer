@@ -8,6 +8,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { GitHubUser } from '../../types/github';
+import { sanitizeExternalUrl } from '../../utils/securitySanitizer';
 
 interface ProfileHeaderProps {
   user: GitHubUser;
@@ -79,20 +80,24 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
                 <span className="break-words">{user.location}</span>
               </div>
             )}
-            {user.blog && (
-              <div className="flex items-center gap-1.5 min-w-0">
-                <LinkIcon className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-                <a
-                  href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${user.login}'s website (opens in a new tab)`}
-                  className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[200px] sm:max-w-[220px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                >
-                  {user.blog.replace(/^https?:\/\//, '')}
-                </a>
-              </div>
-            )}
+            {user.blog && (() => {
+              const safeBlogUrl = sanitizeExternalUrl(user.blog);
+              if (!safeBlogUrl) return null;
+              return (
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <LinkIcon className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
+                  <a
+                    href={safeBlogUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${user.login}'s website (opens in a new tab)`}
+                    className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[200px] sm:max-w-[220px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    {user.blog.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              );
+            })()}
             {user.twitter_username && (
               <div className="flex items-center gap-1.5">
                 <AtSign className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
