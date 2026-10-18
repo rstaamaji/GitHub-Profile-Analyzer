@@ -184,6 +184,19 @@ npm run preview
 
 ---
 
+## Continuous Integration (CI)
+
+This repository enforces automated quality checks on every `push` to `main` and on all `pull_request` events targeting `main` via GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
+
+- **Environment**: Ubuntu Latest running Node.js LTS matrix (`20.x`, `22.x`).
+- **Reproducible Install**: `npm ci` leveraging npm dependency cache.
+- **Linter**: `npm run lint` ([oxlint](https://oxc.rs/)) ensuring code style compliance.
+- **Unit Tests**: `npm test` running 26 unit tests via Node.js native test runner.
+- **Production Build**: `npm run build` validating TypeScript compilation (`tsc -b`) and Vite asset bundling.
+- **Security**: Adheres to least privilege (`contents: read`), zero token secrets required, with concurrency cancellation for outdated runs.
+
+---
+
 ## How to Use
 
 ### Searching a Profile
