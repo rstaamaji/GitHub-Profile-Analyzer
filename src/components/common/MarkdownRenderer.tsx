@@ -95,9 +95,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         'ul', 'ol', 'li', 'blockquote', 'hr', 'img', 'span', 'br',
       ],
       ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'loading'],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
       ADD_ATTR: ['target', 'rel'],
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'style'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
     });
   }, [content]);
 
