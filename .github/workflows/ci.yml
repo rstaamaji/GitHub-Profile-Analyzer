@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies (clean reproducible install)
         run: npm ci
 
+      - name: Run dependency security audit
+        run: npm audit --audit-level=high
+
       - name: Run code linter
         run: npm run lint
 
