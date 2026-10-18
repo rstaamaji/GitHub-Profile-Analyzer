@@ -8,36 +8,43 @@ on:
     branches:
       - main
 
+# Minimal read permissions adhering to principle of least privilege
 permissions:
   contents: read
 
+# Cancel any redundant in-progress runs for the same branch or pull request
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
-    name: Lint, Test & Build
+    name: Lint, Test & Build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies (clean reproducible install)
         run: npm ci
 
-      - name: Lint source code
+      - name: Run code linter
         run: npm run lint
 
-      - name: Run unit test suite
+      - name: Run unit tests
         run: npm test
 
-      - name: Type-check and production build
+      - name: Run TypeScript type-check and Vite production build
         run: npm run build
