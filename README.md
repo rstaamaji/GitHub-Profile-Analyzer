@@ -1,5 +1,7 @@
 # GitHub Profile Analyzer
 
+[![CI](https://github.com/rstaamaji/GitHub-Profile-Analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/rstaamaji/GitHub-Profile-Analyzer/actions/workflows/ci.yml)
+
 A developer analytics web application for inspecting and comparing public GitHub profiles and repositories using the [GitHub REST API v3](https://docs.github.com/en/rest). Built with React 19, TypeScript 6, Vite 8, and Tailwind CSS v4.
 
 ---
