@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Search, ArrowRight, X, Command, Loader2, AlertCircle } from 'lucide-react';
 
+import { validateGitHubUsername } from '../../utils/securitySanitizer';
+
 interface SearchBarProps {
   onSearch: (username: string) => void;
   isLoading?: boolean;
@@ -32,15 +34,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     e.preventDefault();
     if (isLoading) return;
 
-    const clean = username.trim().replace(/^@/, '');
-    if (!clean) {
-      setEmptyHint('Please enter a GitHub username to analyze.');
+    const validation = validateGitHubUsername(username);
+    if (!validation.isValid) {
+      setEmptyHint(validation.reason || 'Please enter a valid GitHub username.');
       inputRef.current?.focus();
       return;
     }
 
     setEmptyHint(null);
-    onSearch(clean);
+    onSearch(validation.cleanUsername);
   };
 
   const handleClear = () => {
