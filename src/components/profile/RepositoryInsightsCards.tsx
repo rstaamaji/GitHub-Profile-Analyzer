@@ -18,7 +18,7 @@ interface RepositoryInsightsCardsProps {
   onNavigateToTab?: (tab: 'repositories' | 'analytics') => void;
 }
 
-export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = ({
+export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = React.memo(({
   mostStarredRepo,
   mostRecentlyPushedRepo,
   topLanguage,
@@ -218,4 +218,7 @@ export const RepositoryInsightsCards: React.FC<RepositoryInsightsCardsProps> = (
       </div>
     </section>
   );
-};
+});
+
+RepositoryInsightsCards.displayName = 'RepositoryInsightsCards';
+
