@@ -8,7 +8,7 @@ interface StatCardProps {
   hint?: string;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, hint }) => {
+export const StatCard: React.FC<StatCardProps> = React.memo(({ label, value, icon, hint }) => {
   const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
 
   return (
@@ -29,4 +29,6 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, hint }) 
       </div>
     </div>
   );
-};
+});
+
+StatCard.displayName = 'StatCard';

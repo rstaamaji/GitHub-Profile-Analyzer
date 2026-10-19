@@ -38,7 +38,7 @@ const LANGUAGE_COLORS: Record<string, string> = {
   Scala: '#c22d40',
 };
 
-export const RepoCard: React.FC<RepoCardProps> = ({ repo, onSelectRepo }) => {
+export const RepoCard: React.FC<RepoCardProps> = React.memo(({ repo, onSelectRepo }) => {
   const updatedDate = new Date(repo.pushed_at || repo.updated_at).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -213,4 +213,7 @@ export const RepoCard: React.FC<RepoCardProps> = ({ repo, onSelectRepo }) => {
       </div>
     </article>
   );
-};
+});
+
+RepoCard.displayName = 'RepoCard';
+
