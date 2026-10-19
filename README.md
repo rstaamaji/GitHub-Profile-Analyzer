@@ -46,15 +46,18 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Example quick-fill pairs included; swap A ↔ B button
 
 ### 🚀 Performance & Reliability
-- **TTL caching** in `sessionStorage` (profiles: 5 min, repo lists: 3 min, repo details: 5 min, README: 10 min)
-- **In-flight request deduplication** — identical concurrent requests share one network call
-- **Stale-on-error fallback** — if a fresh request fails but a cache entry exists, the cached data is shown with a clear "data may be outdated" label
-- Automatic rate limit header extraction and live display in the header
-- Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout
+- **Component Memoization**: `StatCard`, `RepoCard`, `RepositoryInsightsCards`, and `RecentActivityList` are memoized via `React.memo` and callback handlers are stabilized with `useCallback` to prevent cascading re-renders across list operations.
+- **Code Splitting & Lazy Loading**: Heavy views (`RepoDetailView`, `AnalyticsContainer`, and `ProfileComparisonView`) are dynamically loaded on-demand via `React.lazy` and `Suspense`, dramatically accelerating initial page loads.
+- **Vendor Chunk Splitting**: Vite Rollup `manualChunks` isolates `vendor-react`, `vendor-charts` (Recharts & D3), and `vendor-dompurify`. Reduces initial application JavaScript chunk from ~836 kB down to ~105 kB (~24 kB gzip), eliminating chunk size warnings.
+- **TTL Caching** in `sessionStorage` (profiles: 5 min, repo lists: 3 min, repo details: 5 min, README: 10 min).
+- **In-flight Request Deduplication**: identical concurrent requests share one network call.
+- **Stale-on-error Fallback**: if a fresh request fails but a cache entry exists, the cached data is displayed with an explicit freshness indicator.
+- Automatic rate limit header extraction and live display in the header.
+- Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout.
 
 ### 🧪 Testing
-- 26 unit tests via Node.js built-in `--test` runner (no external framework required)
-- Covers: overview stats aggregation, repository filter/sort/search, language extraction, null/edge-case handling
+- 35 unit tests across 8 suites via Node.js built-in `--test` runner (using `tsx`).
+- Covers: caching/deduplication, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 
