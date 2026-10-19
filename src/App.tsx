@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { AlertTriangle, BarChart3, Clock, FolderGit2, RefreshCw } from 'lucide-react';
 import type {
   GitHubRepo,
@@ -20,9 +20,24 @@ import { ErrorState } from './components/common/ErrorState';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ProfileOverview } from './components/profile/ProfileOverview';
 import { RepoExplorer } from './components/profile/RepoExplorer';
-import { RepoDetailView } from './components/profile/RepoDetailView';
-import { AnalyticsContainer } from './components/analytics/AnalyticsContainer';
-import { ProfileComparisonView } from './components/compare/ProfileComparisonView';
+
+// Lazy-loaded heavy views to optimize initial load & bundle code splitting
+const RepoDetailView = lazy(() =>
+  import('./components/profile/RepoDetailView').then((m) => ({ default: m.RepoDetailView }))
+);
+const AnalyticsContainer = lazy(() =>
+  import('./components/analytics/AnalyticsContainer').then((m) => ({ default: m.AnalyticsContainer }))
+);
+const ProfileComparisonView = lazy(() =>
+  import('./components/compare/ProfileComparisonView').then((m) => ({ default: m.ProfileComparisonView }))
+);
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center py-16 text-neutral-400 text-sm">
+    <RefreshCw className="w-5 h-5 animate-spin text-emerald-400 mr-2.5" aria-hidden="true" />
+    <span>Memuat tampilan...</span>
+  </div>
+);
 
 
 
@@ -451,13 +466,15 @@ export function App() {
                 hidden={activeTab !== 'repositories'}
               >
                 {selectedRepo ? (
-                  <RepoDetailView
-                    owner={selectedRepo.owner?.login || currentUser?.login || lastSearchedUser}
-                    repoName={selectedRepo.name}
-                    onBack={() => setSelectedRepo(null)}
-                    cachedRepo={selectedRepo}
-                    onRateLimitUpdate={setRateLimit}
-                  />
+                  <Suspense fallback={<LazyFallback />}>
+                    <RepoDetailView
+                      owner={selectedRepo.owner?.login || currentUser?.login || lastSearchedUser}
+                      repoName={selectedRepo.name}
+                      onBack={() => setSelectedRepo(null)}
+                      cachedRepo={selectedRepo}
+                      onRateLimitUpdate={setRateLimit}
+                    />
+                  </Suspense>
                 ) : currentUser ? (
                   <RepoExplorer
                     repos={repos}
@@ -497,18 +514,20 @@ export function App() {
                 hidden={activeTab !== 'analytics'}
               >
                 {currentUser ? (
-                  <AnalyticsContainer
-                    repos={repos}
-                    totalPublicRepos={currentUser.public_repos}
-                    username={currentUser.login}
-                    hasMoreRepos={hasMoreRepos}
-                    isLoadingMore={isLoadingMoreRepos}
-                    onFetchMoreRepos={handleLoadMoreRepos}
-                    onSelectRepo={(repo) => {
-                      setSelectedRepo(repo);
-                      setActiveTab('repositories');
-                    }}
-                  />
+                  <Suspense fallback={<LazyFallback />}>
+                    <AnalyticsContainer
+                      repos={repos}
+                      totalPublicRepos={currentUser.public_repos}
+                      username={currentUser.login}
+                      hasMoreRepos={hasMoreRepos}
+                      isLoadingMore={isLoadingMoreRepos}
+                      onFetchMoreRepos={handleLoadMoreRepos}
+                      onSelectRepo={(repo) => {
+                        setSelectedRepo(repo);
+                        setActiveTab('repositories');
+                      }}
+                    />
+                  </Suspense>
                 ) : (
                   <TabPlaceholder
                     title="Programming Language & Activity Analytics"
@@ -535,11 +554,13 @@ export function App() {
             aria-labelledby="tab-compare"
             hidden={activeTab !== 'compare'}
           >
-            <ProfileComparisonView
-              activeUser={currentUser}
-              activeRepos={repos}
-              onRateLimitUpdate={setRateLimit}
-            />
+            <Suspense fallback={<LazyFallback />}>
+              <ProfileComparisonView
+                activeUser={currentUser}
+                activeRepos={repos}
+                onRateLimitUpdate={setRateLimit}
+              />
+            </Suspense>
           </div>
         </div>
       </main>
