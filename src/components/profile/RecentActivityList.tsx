@@ -9,7 +9,7 @@ interface RecentActivityListProps {
   onViewAllRepos?: () => void;
 }
 
-export const RecentActivityList: React.FC<RecentActivityListProps> = ({
+export const RecentActivityList: React.FC<RecentActivityListProps> = React.memo(({
   repos,
   onSelectRepo,
   onViewAllRepos,
@@ -162,4 +162,6 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
       </div>
     </section>
   );
-};
+});
+
+RecentActivityList.displayName = 'RecentActivityList';
