@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Search,
   SlidersHorizontal,
@@ -97,13 +97,13 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
 
   const isDefaultSort = sortBy === 'pushed';
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedLanguage('all');
     setFilterType('all');
     setMinStars(0);
     setSortBy('pushed');
-  };
+  }, []);
 
   const isPartialDataset = repos.length < totalPublicRepos;
 
