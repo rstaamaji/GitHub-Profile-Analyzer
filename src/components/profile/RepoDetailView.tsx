@@ -38,6 +38,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
 }) => {
   const [repo, setRepo] = useState<GitHubRepo | null>(cachedRepo || null);
   const [readme, setReadme] = useState<ReadmeData | null>(null);
+  const [readmeError, setReadmeError] = useState<ApiError | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState<boolean>(!cachedRepo);
   const [isLoadingReadme, setIsLoadingReadme] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -107,6 +108,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
     // 2. Fetch README Content (cached by githubService for 10 minutes)
     const fetchReadme = async () => {
       setIsLoadingReadme(true);
+      setReadmeError(null);
       try {
         const readmeRes = await githubService.getRepoReadme(owner, repoName, {
           signal: controller.signal,
@@ -127,7 +129,11 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
           return;
         }
-        // README errors (e.g. 404) are handled gracefully without blocking the whole page
+        const apiErr = err as ApiError;
+        // Non-404 README errors (e.g. rate-limit or network) stored for explicit retry
+        if (apiErr.status !== 404) {
+          setReadmeError(apiErr);
+        }
         setReadme(null);
       } finally {
         setIsLoadingReadme(false);
@@ -156,6 +162,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
       setIsRefreshing(true);
     }
     setIsLoadingReadme(true);
+    setReadmeError(null);
     setError(null);
     setCacheMeta(null);
 
@@ -200,7 +207,34 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
         }
         setReadme(res.data);
       })
-      .catch(() => setReadme(null))
+      .catch((err) => {
+        const apiErr = err as ApiError;
+        if (apiErr.status !== 404) {
+          setReadmeError(apiErr);
+        }
+        setReadme(null);
+      })
+      .finally(() => setIsLoadingReadme(false));
+  };
+
+  const handleRetryReadme = () => {
+    setIsLoadingReadme(true);
+    setReadmeError(null);
+    githubService
+      .getRepoReadme(owner, repoName, { forceRefresh: true })
+      .then((res) => {
+        if (res.rateLimit && onRateLimitUpdate) {
+          onRateLimitUpdate(res.rateLimit);
+        }
+        setReadme(res.data);
+      })
+      .catch((err) => {
+        const apiErr = err as ApiError;
+        if (apiErr.status !== 404) {
+          setReadmeError(apiErr);
+        }
+        setReadme(null);
+      })
       .finally(() => setIsLoadingReadme(false));
   };
 
@@ -534,9 +568,26 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
           </div>
         ) : readme && readme.content ? (
           <MarkdownRenderer content={readme.content} />
+        ) : readmeError ? (
+          <div className="py-6 px-4 text-center rounded-lg bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs space-y-2">
+            <p>
+              {readmeError.isRateLimit
+                ? 'README could not be loaded because the GitHub API rate limit was reached.'
+                : readmeError.message || 'Failed to retrieve README from repository.'}
+            </p>
+            <button
+              onClick={handleRetryReadme}
+              disabled={isLoadingReadme}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] hover:bg-[#30363d] text-neutral-200 rounded border border-[#30363d] text-xs font-medium cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingReadme ? 'animate-spin' : ''}`} aria-hidden="true" />
+              <span>Retry README</span>
+            </button>
+          </div>
         ) : (
           <div className="py-8 text-center text-neutral-400 text-xs italic">
-            This repository does not have a README or it could not be retrieved.
+            This repository does not contain a public README file.
           </div>
         )}
       </section>
