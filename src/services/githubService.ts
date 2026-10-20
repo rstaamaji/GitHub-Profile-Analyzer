@@ -265,6 +265,7 @@ export class GitHubService {
           lowerMsg.includes('secondary rate limit')));
 
     const isAuthError = status === 401 || (status === 403 && !isRateLimit);
+    const isServerError = status >= 500 && status <= 599;
 
     let friendlyMessage = rawMessage || 'Unexpected GitHub API error.';
 
@@ -284,6 +285,8 @@ export class GitHubService {
       friendlyMessage = `Access forbidden by GitHub API (HTTP 403)${
         rawMessage ? `: ${rawMessage}` : '.'
       }`;
+    } else if (isServerError) {
+      friendlyMessage = `GitHub API service is temporarily unavailable or experiencing high load (HTTP ${status}). Please try again shortly.`;
     }
 
     return {
@@ -292,6 +295,7 @@ export class GitHubService {
       resetTime,
       isRateLimit,
       isAuthError,
+      isServerError,
       rateLimit,
     };
   }
@@ -507,6 +511,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected response format from GitHub API (invalid JSON payload).',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -515,6 +520,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected user profile response format from GitHub API.',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -599,6 +605,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected response format from GitHub API (invalid JSON payload).',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -607,6 +614,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected repository list response format from GitHub API.',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -684,6 +692,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected response format from GitHub API (invalid JSON payload).',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -692,6 +701,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected repository detail response format from GitHub API.',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -773,6 +783,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected response format from GitHub API (invalid JSON payload).',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }
@@ -781,6 +792,7 @@ export class GitHubService {
             throw {
               message: 'Unexpected README response format from GitHub API.',
               status: response.status,
+              isInvalidResponse: true,
               rateLimit,
             } satisfies ApiError;
           }

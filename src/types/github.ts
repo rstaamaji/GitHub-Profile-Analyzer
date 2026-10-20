@@ -182,6 +182,8 @@ export interface ApiError {
   documentation_url?: string;
   isRateLimit?: boolean;
   isAuthError?: boolean;
+  isServerError?: boolean;
+  isInvalidResponse?: boolean;
   rateLimit?: RateLimitInfo;
 }
 
