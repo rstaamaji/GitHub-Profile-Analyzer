@@ -251,7 +251,140 @@ async function runTests() {
     'other users should remain cached when invalidating a specific username'
   );
 
-  console.log('✓ All githubService caching, TTL, deduplication, and error tests passed!');
+  // 6. Test HTTP 5xx Server Error Handling
+  const server503Service = new GitHubService({
+    enableSessionStorage: false,
+    fetchFn: async () => {
+      return createJsonResponse({ message: 'Service Unavailable' }, 503);
+    },
+  });
+
+  let err503: ApiError | null = null;
+  try {
+    await server503Service.getUser('torvalds');
+  } catch (e) {
+    err503 = e as ApiError;
+  }
+  assertEqual(err503?.status, 503, '503 error must retain status 503');
+  assertEqual(err503?.isServerError, true, '503 error must be flagged as isServerError: true');
+  assertEqual(
+    Boolean(err503?.message.includes('HTTP 503')),
+    true,
+    '503 error message must indicate HTTP 503 service issue'
+  );
+
+  // 7. Test Invalid / Malformed Response Payload Handling
+  const invalidJsonService = new GitHubService({
+    enableSessionStorage: false,
+    fetchFn: async () => {
+      return new Response('<html><head><title>502 Bad Gateway</title></head><body>Bad Gateway</body></html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      });
+    },
+  });
+
+  let malformedJsonErr: ApiError | null = null;
+  try {
+    await invalidJsonService.getUser('torvalds');
+  } catch (e) {
+    malformedJsonErr = e as ApiError;
+  }
+  assertEqual(
+    malformedJsonErr?.isInvalidResponse,
+    true,
+    'Malformed non-JSON payload must be flagged with isInvalidResponse: true'
+  );
+
+  // 8. Test Pre-flight Validation to Prevent Wasting Network Quota
+  let preflightFetchCount = 0;
+  const preflightService = new GitHubService({
+    enableSessionStorage: false,
+    fetchFn: async () => {
+      preflightFetchCount++;
+      return createJsonResponse(createMockUser('validuser'));
+    },
+  });
+
+  let invalidUsernameErr: ApiError | null = null;
+  try {
+    await preflightService.getUser('-invalid-leading-hyphen');
+  } catch (e) {
+    invalidUsernameErr = e as ApiError;
+  }
+  assertEqual(invalidUsernameErr?.status, 400, 'Invalid username must reject with status 400');
+  assertEqual(
+    preflightFetchCount,
+    0,
+    'Pre-flight validation must NOT make network requests for invalid usernames'
+  );
+
+  // 9. Test Network Offline / Fetch Failure
+  const offlineService = new GitHubService({
+    enableSessionStorage: false,
+    fetchFn: async () => {
+      throw new TypeError('Failed to fetch');
+    },
+  });
+
+  let networkErr: ApiError | null = null;
+  try {
+    await offlineService.getUser('torvalds');
+  } catch (e) {
+    networkErr = e as ApiError;
+  }
+  assertEqual(networkErr?.status, undefined, 'Network error should not have an HTTP status code');
+  assertEqual(
+    Boolean(networkErr?.message.toLowerCase().includes('network')),
+    true,
+    'Network error message must explain connectivity failure'
+  );
+
+  // 10. Test Retry-After Header Parsing with Seconds and HTTP Date
+  let parsedResetSeconds: Date | undefined;
+  let parsedResetDate: Date | undefined;
+
+  const retryHeaderService = new GitHubService({
+    enableSessionStorage: false,
+    nowFn: () => 1_700_000_000_000,
+    fetchFn: async (input) => {
+      const url = String(input);
+      if (url.includes('retry-seconds')) {
+        return createJsonResponse({ message: 'Rate limit' }, 429, {
+          'retry-after': '120',
+          'x-ratelimit-remaining': '0',
+        });
+      }
+      return createJsonResponse({ message: 'Rate limit' }, 429, {
+        'retry-after': 'Wed, 21 Oct 2026 07:28:00 GMT',
+        'x-ratelimit-remaining': '0',
+      });
+    },
+  });
+
+  try {
+    await retryHeaderService.getUser('retry-seconds');
+  } catch (e) {
+    parsedResetSeconds = (e as ApiError).resetTime;
+  }
+  assertEqual(
+    parsedResetSeconds?.getTime(),
+    1_700_000_000_000 + 120_000,
+    'Retry-After seconds must be added to current time'
+  );
+
+  try {
+    await retryHeaderService.getUser('retry-date');
+  } catch (e) {
+    parsedResetDate = (e as ApiError).resetTime;
+  }
+  assertEqual(
+    parsedResetDate?.toUTCString(),
+    'Wed, 21 Oct 2026 07:28:00 GMT',
+    'Retry-After HTTP date string must be parsed correctly'
+  );
+
+  console.log('✓ All githubService caching, TTL, deduplication, 5xx, invalid payload, pre-flight, and error tests passed!');
 }
 
 runTests();

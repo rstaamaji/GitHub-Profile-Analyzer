@@ -244,12 +244,7 @@ export class GitHubService {
     const retryAfterHeader = headers.get('retry-after');
 
     let resetTime: Date | undefined;
-    if (resetHeader) {
-      const resetEpochMs = parseInt(resetHeader, 10) * 1000;
-      if (!Number.isNaN(resetEpochMs)) {
-        resetTime = new Date(resetEpochMs);
-      }
-    } else if (retryAfterHeader) {
+    if (retryAfterHeader) {
       const retrySeconds = parseInt(retryAfterHeader, 10);
       if (!Number.isNaN(retrySeconds)) {
         resetTime = new Date(this.nowFn() + retrySeconds * 1000);
@@ -258,6 +253,11 @@ export class GitHubService {
         if (!Number.isNaN(parsedDate.getTime())) {
           resetTime = parsedDate;
         }
+      }
+    } else if (resetHeader) {
+      const resetEpochMs = parseInt(resetHeader, 10) * 1000;
+      if (!Number.isNaN(resetEpochMs)) {
+        resetTime = new Date(resetEpochMs);
       }
     }
 
