@@ -6,6 +6,7 @@ import type {
   ReadmeData,
   ServiceRequestOptions,
 } from '../types/github';
+import { validateGitHubUsername } from '../utils/securitySanitizer';
 
 const DEFAULT_GITHUB_API_BASE = 'https://api.github.com';
 const SESSION_STORAGE_PREFIX = 'gh_analyzer_cache_v1:';
@@ -252,6 +253,11 @@ export class GitHubService {
       const retrySeconds = parseInt(retryAfterHeader, 10);
       if (!Number.isNaN(retrySeconds)) {
         resetTime = new Date(this.nowFn() + retrySeconds * 1000);
+      } else {
+        const parsedDate = new Date(retryAfterHeader);
+        if (!Number.isNaN(parsedDate.getTime())) {
+          resetTime = parsedDate;
+        }
       }
     }
 
@@ -473,12 +479,20 @@ export class GitHubService {
     username: string,
     signalOrOptions?: AbortSignal | ServiceRequestOptions
   ): Promise<ServiceResponse<GitHubUser>> {
+    const validation = validateGitHubUsername(username);
+    if (!validation.isValid) {
+      throw {
+        message: validation.reason || 'Invalid GitHub username provided.',
+        status: 400,
+      } satisfies ApiError;
+    }
+
     const options: ServiceRequestOptions =
       signalOrOptions && 'aborted' in signalOrOptions
         ? { signal: signalOrOptions }
         : (signalOrOptions ?? {});
 
-    const cleanUsername = username.trim().replace(/^@/, '').toLowerCase();
+    const cleanUsername = validation.cleanUsername.toLowerCase();
     const cacheKey = buildUserCacheKey(cleanUsername);
 
     return this.executeWithCacheAndDedup<GitHubUser>(
@@ -558,12 +572,20 @@ export class GitHubService {
     sort: 'pushed' | 'updated' | 'full_name' | 'created' = 'pushed',
     signalOrOptions?: AbortSignal | ServiceRequestOptions
   ): Promise<ServiceResponse<GitHubRepo[]>> {
+    const validation = validateGitHubUsername(username);
+    if (!validation.isValid) {
+      throw {
+        message: validation.reason || 'Invalid GitHub username provided.',
+        status: 400,
+      } satisfies ApiError;
+    }
+
     const options: ServiceRequestOptions =
       signalOrOptions && 'aborted' in signalOrOptions
         ? { signal: signalOrOptions }
         : (signalOrOptions ?? {});
 
-    const cleanUsername = username.trim().replace(/^@/, '').toLowerCase();
+    const cleanUsername = validation.cleanUsername.toLowerCase();
     const cacheKey = buildUserReposCacheKey(cleanUsername, perPage, page, sort);
 
     return this.executeWithCacheAndDedup<GitHubRepo[]>(
@@ -649,13 +671,20 @@ export class GitHubService {
     repo: string,
     signalOrOptions?: AbortSignal | ServiceRequestOptions
   ): Promise<ServiceResponse<GitHubRepo>> {
+    const cleanOwner = owner.trim().toLowerCase();
+    const cleanRepo = repo.trim();
+    if (!cleanOwner || !cleanRepo) {
+      throw {
+        message: 'Repository owner and repository name must not be empty.',
+        status: 400,
+      } satisfies ApiError;
+    }
+
     const options: ServiceRequestOptions =
       signalOrOptions && 'aborted' in signalOrOptions
         ? { signal: signalOrOptions }
         : (signalOrOptions ?? {});
 
-    const cleanOwner = owner.trim().toLowerCase();
-    const cleanRepo = repo.trim();
     const cacheKey = buildRepoDetailCacheKey(cleanOwner, cleanRepo);
 
     return this.executeWithCacheAndDedup<GitHubRepo>(
@@ -736,13 +765,20 @@ export class GitHubService {
     repo: string,
     signalOrOptions?: AbortSignal | ServiceRequestOptions
   ): Promise<ServiceResponse<ReadmeData | null>> {
+    const cleanOwner = owner.trim().toLowerCase();
+    const cleanRepo = repo.trim();
+    if (!cleanOwner || !cleanRepo) {
+      throw {
+        message: 'Repository owner and repository name must not be empty.',
+        status: 400,
+      } satisfies ApiError;
+    }
+
     const options: ServiceRequestOptions =
       signalOrOptions && 'aborted' in signalOrOptions
         ? { signal: signalOrOptions }
         : (signalOrOptions ?? {});
 
-    const cleanOwner = owner.trim().toLowerCase();
-    const cleanRepo = repo.trim();
     const cacheKey = buildRepoReadmeCacheKey(cleanOwner, cleanRepo);
 
     return this.executeWithCacheAndDedup<ReadmeData | null>(
