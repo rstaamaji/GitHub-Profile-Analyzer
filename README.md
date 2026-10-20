@@ -46,6 +46,11 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Example quick-fill pairs included; swap A ↔ B button
 
 ### 🚀 Performance & Reliability
+- **Comprehensive API Error Handling**: Graceful, user-friendly error recovery across all HTTP failure modes: 404 (Not Found), 403/429 (Rate Limit exceeded with local reset clock and remaining minutes estimate), 5xx (GitHub Service Outage / High Load), and unexpected/malformed JSON payloads.
+- **Pre-Flight Input Validation**: Validates GitHub username format prior to network calls, saving valuable unauthenticated rate limit quota from being wasted on invalid inputs.
+- **Race Condition & Sequence Defense**: Combines `AbortController` signal cancellation with an atomic request sequence token to guarantee stale responses never overwrite newer active queries.
+- **State Recovery & Safe Snapshotting**: Automatically snapshots valid profile states before new searches, providing a 1-click "Restore Previous Profile" action if a newly queried username fails.
+- **Granular Inline Retries**: Isolated retry mechanisms for paginated repository loading and repository README previews without full-page reloads.
 - **Component Memoization**: `StatCard`, `RepoCard`, `RepositoryInsightsCards`, and `RecentActivityList` are memoized via `React.memo` and callback handlers are stabilized with `useCallback` to prevent cascading re-renders across list operations.
 - **Code Splitting & Lazy Loading**: Heavy views (`RepoDetailView`, `AnalyticsContainer`, and `ProfileComparisonView`) are dynamically loaded on-demand via `React.lazy` and `Suspense`, dramatically accelerating initial page loads.
 - **Vendor Chunk Splitting**: Vite Rollup `manualChunks` isolates `vendor-react`, `vendor-charts` (Recharts & D3), and `vendor-dompurify`. Reduces initial application JavaScript chunk from ~836 kB down to ~105 kB (~24 kB gzip), eliminating chunk size warnings.
@@ -57,7 +62,7 @@ A developer analytics web application for inspecting and comparing public GitHub
 
 ### 🧪 Testing
 - 35 unit tests across 8 suites via Node.js built-in `--test` runner (using `tsx`).
-- Covers: caching/deduplication, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
+- Covers: caching/deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 

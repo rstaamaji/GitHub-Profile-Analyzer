@@ -7,6 +7,8 @@ interface ErrorStateProps {
   searchedUsername?: string;
   onRetry?: () => void;
   onReset?: () => void;
+  onRestorePrevious?: () => void;
+  previousUsername?: string;
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
@@ -14,6 +16,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   searchedUsername,
   onRetry,
   onReset,
+  onRestorePrevious,
+  previousUsername,
 }) => {
   const isAuthError = Boolean(error?.isAuthError) || error?.status === 401;
   const isRateLimit =
@@ -107,6 +111,17 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
             <span>Try Again</span>
+          </button>
+        )}
+
+        {onRestorePrevious && previousUsername && (
+          <button
+            onClick={onRestorePrevious}
+            type="button"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-emerald-400 border border-[#30363d] rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
+          >
+            <RotateCcw className="w-4 h-4" aria-hidden="true" />
+            <span>Restore @{previousUsername}</span>
           </button>
         )}
 
