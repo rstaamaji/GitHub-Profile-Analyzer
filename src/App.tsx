@@ -58,6 +58,14 @@ export function App() {
   // Reference to abort ongoing requests if a new one is launched or on unmount
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeSearchUserRef = useRef<string>('');
+  const searchSequenceTokenRef = useRef<number>(0);
+  const [previousSnapshot, setPreviousSnapshot] = useState<{
+    user: GitHubUser;
+    repos: GitHubRepo[];
+    page: number;
+    hasMore: boolean;
+    cacheMeta: CacheMeta | null;
+  } | null>(null);
 
   // Initial rate limit fetch on mount
   useEffect(() => {
@@ -87,6 +95,17 @@ export function App() {
         return;
       }
 
+      // Snapshot current valid profile before initiating new search to allow graceful recovery
+      if (currentUser) {
+        setPreviousSnapshot({
+          user: currentUser,
+          repos,
+          page: repoPage,
+          hasMore: hasMoreRepos,
+          cacheMeta,
+        });
+      }
+
       // Cancel any previous in-flight request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -95,6 +114,7 @@ export function App() {
       const controller = new AbortController();
       abortControllerRef.current = controller;
       activeSearchUserRef.current = cleanUsername;
+      const currentToken = ++searchSequenceTokenRef.current;
 
       // Clear previous profile data immediately so stale data is never shown for the new username
       setCurrentUser(null);
@@ -114,6 +134,9 @@ export function App() {
           signal: controller.signal,
           forceRefresh,
         });
+
+        if (searchSequenceTokenRef.current !== currentToken) return;
+
         if (userRes.rateLimit) {
           setRateLimit(userRes.rateLimit);
         }
@@ -132,6 +155,9 @@ export function App() {
               forceRefresh,
             }
           );
+
+          if (searchSequenceTokenRef.current !== currentToken) return;
+
           if (reposRes.rateLimit) {
             setRateLimit(reposRes.rateLimit);
           }
@@ -148,6 +174,8 @@ export function App() {
             staleReason: userRes.staleReason || reposRes.staleReason,
           });
         } catch (repoErr: unknown) {
+          if (searchSequenceTokenRef.current !== currentToken) return;
+
           if (
             repoErr &&
             typeof repoErr === 'object' &&
@@ -180,11 +208,15 @@ export function App() {
           });
         }
 
+        if (searchSequenceTokenRef.current !== currentToken) return;
+
         setViewState('success');
         if (!forceRefresh) {
           setActiveTab('overview');
         }
       } catch (err: unknown) {
+        if (searchSequenceTokenRef.current !== currentToken) return;
+
         // Ignore AbortError caused by new searches
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
           return;
@@ -200,15 +232,19 @@ export function App() {
           resetTime: apiErr.resetTime,
           isRateLimit: apiErr.isRateLimit,
           isAuthError: apiErr.isAuthError,
+          isServerError: apiErr.isServerError,
+          isInvalidResponse: apiErr.isInvalidResponse,
         });
         setViewState('error');
       } finally {
-        if (abortControllerRef.current === controller) {
-          abortControllerRef.current = null;
+        if (searchSequenceTokenRef.current === currentToken) {
+          if (abortControllerRef.current === controller) {
+            abortControllerRef.current = null;
+          }
         }
       }
     },
-    [viewState]
+    [viewState, currentUser, repos, repoPage, hasMoreRepos, cacheMeta]
   );
 
   const handleLoadMoreRepos = useCallback(async () => {
@@ -261,11 +297,32 @@ export function App() {
     }
   }, [currentUser, isLoadingMoreRepos, hasMoreRepos, repoPage]);
 
+  const handleRestorePrevious = useCallback(() => {
+    if (!previousSnapshot) return;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    ++searchSequenceTokenRef.current;
+    setCurrentUser(previousSnapshot.user);
+    setRepos(previousSnapshot.repos);
+    setRepoPage(previousSnapshot.page);
+    setHasMoreRepos(previousSnapshot.hasMore);
+    setCacheMeta(previousSnapshot.cacheMeta);
+    setLastSearchedUser(previousSnapshot.user.login);
+    activeSearchUserRef.current = previousSnapshot.user.login;
+    setError(null);
+    setRepoLoadError(null);
+    setViewState('success');
+  }, [previousSnapshot]);
+
   const handleReset = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    ++searchSequenceTokenRef.current;
+    setPreviousSnapshot(null);
     activeSearchUserRef.current = '';
     setCurrentUser(null);
     setRepos([]);
@@ -335,6 +392,8 @@ export function App() {
               searchedUsername={lastSearchedUser}
               onRetry={lastSearchedUser ? () => handleSearch(lastSearchedUser, { forceRefresh: true }) : undefined}
               onReset={handleReset}
+              onRestorePrevious={previousSnapshot ? handleRestorePrevious : undefined}
+              previousUsername={previousSnapshot?.user.login}
             />
           )}
 
