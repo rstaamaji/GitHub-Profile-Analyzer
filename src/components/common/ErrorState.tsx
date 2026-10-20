@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Clock, RefreshCw, RotateCcw, WifiOff } from 'lucide-react';
+import { AlertCircle, Clock, FileWarning, RefreshCw, RotateCcw, ServerOff, WifiOff } from 'lucide-react';
 import type { ApiError } from '../../types/github';
 
 interface ErrorStateProps {
@@ -20,7 +20,9 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     Boolean(error?.isRateLimit) ||
     (!isAuthError && (error?.status === 403 || error?.status === 429));
   const isNotFound = error?.status === 404;
-  const isNetworkError = !error?.status;
+  const isServerError = Boolean(error?.isServerError) || (Boolean(error?.status) && (error?.status ?? 0) >= 500);
+  const isInvalidResponse = Boolean(error?.isInvalidResponse);
+  const isNetworkError = !error?.status && !isInvalidResponse;
 
   const title = isNotFound
     ? 'GitHub User Not Found'
@@ -28,9 +30,18 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       ? 'GitHub API Rate Limit Reached'
       : isAuthError
         ? 'GitHub Access Restricted'
-        : isNetworkError
-          ? 'Network Connection Issue'
-          : 'Unable to Retrieve Profile';
+        : isServerError
+          ? `GitHub Service Outage (HTTP ${error?.status || 500})`
+          : isInvalidResponse
+            ? 'Unexpected API Response Format'
+            : isNetworkError
+              ? 'Network Connection Issue'
+              : 'Unable to Retrieve Profile';
+
+  const resetTimeFormatted =
+    isRateLimit && error?.resetTime instanceof Date && !Number.isNaN(error.resetTime.getTime())
+      ? error.resetTime.toLocaleTimeString()
+      : null;
 
   return (
     <div
@@ -40,6 +51,10 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       <div className="w-12 h-12 mx-auto rounded-full bg-red-950/40 border border-red-500/30 flex items-center justify-center text-red-400">
         {isRateLimit ? (
           <Clock className="w-6 h-6 text-amber-400" aria-hidden="true" />
+        ) : isServerError ? (
+          <ServerOff className="w-6 h-6 text-amber-400" aria-hidden="true" />
+        ) : isInvalidResponse ? (
+          <FileWarning className="w-6 h-6 text-amber-400" aria-hidden="true" />
         ) : isNetworkError ? (
           <WifiOff className="w-6 h-6 text-red-400" aria-hidden="true" />
         ) : (
@@ -68,14 +83,18 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               ? 'Public GitHub API allows 60 unauthenticated requests per hour. Previously visited profiles remain accessible from session cache until the quota resets.'
               : isAuthError
                 ? 'This resource requires elevated permissions or has been restricted by GitHub.'
-                : 'Verify your internet connection and click Try Again to repeat the request.'}
+                : isServerError
+                  ? 'GitHub servers are currently undergoing technical difficulties or high load. Please try again shortly.'
+                  : isInvalidResponse
+                    ? 'The API returned an unexpected or malformed payload. Please try again.'
+                    : 'Verify your internet connection and click Try Again to repeat the request.'}
         </p>
       </div>
 
-      {isRateLimit && error?.resetTime && (
+      {isRateLimit && resetTimeFormatted && (
         <div className="py-2 px-3 bg-[#0d1117] border border-[#30363d] rounded-md inline-block text-xs text-neutral-300">
           Quota resets at:{' '}
-          <span className="font-mono text-amber-400">{error.resetTime.toLocaleTimeString()}</span>
+          <span className="font-mono text-amber-400">{resetTimeFormatted}</span>
         </div>
       )}
 
