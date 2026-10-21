@@ -348,6 +348,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <button
                     onClick={resetFilters}
                     type="button"
+                    aria-label="Reset all repository filters and sorting to defaults"
                     className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[38px] rounded-lg text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[#21262d] border border-transparent hover:border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />
