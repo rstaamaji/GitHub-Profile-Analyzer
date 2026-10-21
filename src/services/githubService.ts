@@ -16,6 +16,7 @@ export const CACHE_TTL_MS = {
   repos: 3 * 60 * 1000, // 3 minutes for repository lists
   repoDetail: 5 * 60 * 1000, // 5 minutes for repository detail metadata
   readme: 10 * 60 * 1000, // 10 minutes for repository README content
+  rateLimit: 30 * 1000, // 30 seconds for rate limit check
 } as const;
 
 export interface CacheEntry<T> {
@@ -46,6 +47,7 @@ export interface GitHubServiceConfig {
   fetchFn?: typeof fetch;
   nowFn?: () => number;
   enableSessionStorage?: boolean;
+  maxMemoryEntries?: number;
 }
 
 function createAbortError(): Error {
@@ -87,6 +89,7 @@ export class GitHubService {
   private readonly fetchFn: typeof fetch;
   private readonly nowFn: () => number;
   private readonly enableSessionStorage: boolean;
+  private readonly maxMemoryEntries: number;
   private readonly memoryCache = new Map<string, CacheEntry<unknown>>();
   private readonly inFlightRequests = new Map<string, InFlightRequest<unknown>>();
   private lastKnownRateLimit: RateLimitInfo | undefined;
@@ -102,6 +105,7 @@ export class GitHubService {
     this.nowFn = config.nowFn || (() => Date.now());
     this.enableSessionStorage =
       config.enableSessionStorage ?? typeof window !== 'undefined';
+    this.maxMemoryEntries = config.maxMemoryEntries ?? 100;
   }
 
   private getHeaders(): HeadersInit {
@@ -118,9 +122,25 @@ export class GitHubService {
     return this.parseRateLimitFromHeaders(response.headers);
   }
 
+  private writeToMemory<T>(key: string, entry: CacheEntry<T>): void {
+    if (this.memoryCache.has(key)) {
+      this.memoryCache.delete(key);
+    } else if (this.memoryCache.size >= this.maxMemoryEntries) {
+      // Evict least recently used entry (oldest inserted key in Map)
+      const oldestKey = this.memoryCache.keys().next().value;
+      if (oldestKey) {
+        this.memoryCache.delete(oldestKey);
+      }
+    }
+    this.memoryCache.set(key, entry as CacheEntry<unknown>);
+  }
+
   private readCache<T>(key: string): CacheEntry<T> | null {
     const memEntry = this.memoryCache.get(key) as CacheEntry<T> | undefined;
     if (memEntry) {
+      // Refresh recency for LRU ordering
+      this.memoryCache.delete(key);
+      this.memoryCache.set(key, memEntry);
       return memEntry;
     }
 
@@ -134,7 +154,7 @@ export class GitHubService {
             typeof parsed.cachedAt === 'number' &&
             typeof parsed.expiresAt === 'number'
           ) {
-            this.memoryCache.set(key, parsed);
+            this.writeToMemory(key, parsed);
             return parsed;
           }
         }
@@ -160,17 +180,85 @@ export class GitHubService {
       hasNextPage,
     };
 
-    this.memoryCache.set(key, entry);
+    this.writeToMemory(key, entry);
 
     if (this.enableSessionStorage && typeof sessionStorage !== 'undefined') {
       try {
         sessionStorage.setItem(`${SESSION_STORAGE_PREFIX}${key}`, JSON.stringify(entry));
       } catch {
-        // Ignore sessionStorage quota errors safely
+        // Storage quota exceeded: prune expired entries and retry once safely
+        try {
+          this.pruneExpiredEntries();
+          sessionStorage.setItem(`${SESSION_STORAGE_PREFIX}${key}`, JSON.stringify(entry));
+        } catch {
+          // Ignore sessionStorage quota errors safely
+        }
       }
     }
 
     return entry;
+  }
+
+  /**
+   * Prunes expired cache entries across memory and session storage.
+   * Returns the count of memory entries purged.
+   */
+  public pruneExpiredEntries(): number {
+    const now = this.nowFn();
+    let purged = 0;
+
+    for (const [key, entry] of Array.from(this.memoryCache.entries())) {
+      if (now >= entry.expiresAt) {
+        this.memoryCache.delete(key);
+        purged++;
+      }
+    }
+
+    if (this.enableSessionStorage && typeof sessionStorage !== 'undefined') {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const storageKey = sessionStorage.key(i);
+          if (storageKey && storageKey.startsWith(SESSION_STORAGE_PREFIX)) {
+            const raw = sessionStorage.getItem(storageKey);
+            if (raw) {
+              try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed.expiresAt === 'number' && now >= parsed.expiresAt) {
+                  keysToRemove.push(storageKey);
+                }
+              } catch {
+                keysToRemove.push(storageKey);
+              }
+            }
+          }
+        }
+        for (const k of keysToRemove) {
+          sessionStorage.removeItem(k);
+        }
+      } catch {
+        // Ignore storage errors safely
+      }
+    }
+
+    return purged;
+  }
+
+  /**
+   * Returns observability statistics about the current cache state and in-flight deduplication.
+   */
+  public getCacheStats(): {
+    memoryEntriesCount: number;
+    maxMemoryEntries: number;
+    inFlightCount: number;
+    lastKnownRateLimit?: RateLimitInfo;
+  } {
+    return {
+      memoryEntriesCount: this.memoryCache.size,
+      maxMemoryEntries: this.maxMemoryEntries,
+      inFlightCount: this.inFlightRequests.size,
+      lastKnownRateLimit: this.lastKnownRateLimit,
+    };
   }
 
   /**
@@ -879,26 +967,44 @@ export class GitHubService {
   }
 
   /**
-   * Check current GitHub API rate limit status
+   * Check current GitHub API rate limit status with 30s TTL caching and in-flight deduplication.
    */
-  async getRateLimit(): Promise<RateLimitInfo | null> {
+  async getRateLimit(
+    signalOrOptions?: AbortSignal | ServiceRequestOptions
+  ): Promise<RateLimitInfo | null> {
+    const options: ServiceRequestOptions =
+      signalOrOptions && 'aborted' in signalOrOptions
+        ? { signal: signalOrOptions }
+        : (signalOrOptions ?? {});
+
+    const cacheKey = 'system:rate_limit';
+
     try {
-      const response = await this.fetchFn(`${this.baseUrl}/rate_limit`, {
-        headers: this.getHeaders(),
-      });
-      if (!response.ok) return null;
-      const json = await response.json();
-      if (!json || !json.rate || typeof json.rate.limit !== 'number') {
-        return null;
-      }
-      const info: RateLimitInfo = {
-        limit: json.rate.limit,
-        remaining: json.rate.remaining,
-        reset: json.rate.reset,
-        used: json.rate.used ?? 0,
-      };
-      this.lastKnownRateLimit = info;
-      return info;
+      const res = await this.executeWithCacheAndDedup<RateLimitInfo | null>(
+        cacheKey,
+        CACHE_TTL_MS.rateLimit,
+        options,
+        async (reqSignal) => {
+          const response = await this.fetchFn(`${this.baseUrl}/rate_limit`, {
+            headers: this.getHeaders(),
+            signal: reqSignal,
+          });
+          if (!response.ok) return { data: null };
+          const json = await response.json();
+          if (!json || !json.rate || typeof json.rate.limit !== 'number') {
+            return { data: null };
+          }
+          const info: RateLimitInfo = {
+            limit: json.rate.limit,
+            remaining: json.rate.remaining,
+            reset: json.rate.reset,
+            used: json.rate.used ?? 0,
+          };
+          this.lastKnownRateLimit = info;
+          return { data: info, rateLimit: info };
+        }
+      );
+      return res.data;
     } catch {
       return null;
     }
