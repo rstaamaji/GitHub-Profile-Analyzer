@@ -32,7 +32,7 @@ interface ProfileOverviewProps {
   onNavigateToTab?: (tab: 'repositories' | 'analytics') => void;
 }
 
-export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
+export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
   user,
   repos,
   hasMoreRepos = false,
@@ -222,7 +222,9 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({
       )}
     </div>
   );
-};
+});
+
+ProfileOverview.displayName = 'ProfileOverview';
 
 
 
