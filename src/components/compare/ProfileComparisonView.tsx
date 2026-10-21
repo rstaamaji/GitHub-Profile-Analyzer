@@ -66,7 +66,7 @@ const INITIAL_SLOT: ComparedProfileSlot = {
   error: null,
 };
 
-export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
+export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = React.memo(({
   activeUser = null,
   activeRepos = [],
   onRateLimitUpdate,
@@ -779,4 +779,6 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = ({
       )}
     </div>
   );
-};
+});
+
+ProfileComparisonView.displayName = 'ProfileComparisonView';
