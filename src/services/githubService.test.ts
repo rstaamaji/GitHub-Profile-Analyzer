@@ -421,7 +421,64 @@ async function runTests() {
   assertEqual(checkUser2.fromCache, false, 'Evicted user2 must be re-fetched from network');
   assertEqual(boundedFetchCount, 5, 'Re-fetching evicted user2 increases fetch count to 5');
 
-  console.log('✓ All githubService caching, TTL, deduplication, 5xx, invalid payload, pre-flight, and bounded LRU tests passed!');
+  // 12. Test Proactive Cache Pruning
+  let pruneClock = 2_000_000;
+  const pruneService = new GitHubService({
+    enableSessionStorage: false,
+    nowFn: () => pruneClock,
+    fetchFn: async (input) => {
+      const urlStr = String(input);
+      const user = urlStr.split('/').pop() || 'unknown';
+      return createJsonResponse(createMockUser(user));
+    },
+  });
+
+  await pruneService.getUser('pruneuser1');
+  await pruneService.getUser('pruneuser2');
+  assertEqual(pruneService.getCacheStats().memoryEntriesCount, 2, '2 active entries before expiration');
+
+  // Advance clock beyond TTL (user TTL = 5 min = 300,000ms)
+  pruneClock += CACHE_TTL_MS.user + 5_000;
+  const purgedCount = pruneService.pruneExpiredEntries();
+  assertEqual(purgedCount, 2, 'pruneExpiredEntries should purge 2 expired entries');
+  assertEqual(pruneService.getCacheStats().memoryEntriesCount, 0, 'Cache count is 0 after pruning');
+
+  // 13. Test Rate Limit In-Flight Deduplication and 30s TTL Caching
+  let rateLimitFetches = 0;
+  const rateLimitDedupService = new GitHubService({
+    enableSessionStorage: false,
+    nowFn: () => pruneClock,
+    fetchFn: async () => {
+      rateLimitFetches++;
+      await new Promise((r) => setTimeout(r, 20));
+      return new Response(
+        JSON.stringify({
+          rate: { limit: 60, remaining: 50, reset: 1790000000, used: 10 },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    },
+  });
+
+  // Concurrent calls to getRateLimit share a single in-flight fetch
+  const [rl1, rl2] = await Promise.all([
+    rateLimitDedupService.getRateLimit(),
+    rateLimitDedupService.getRateLimit(),
+  ]);
+  assertEqual(rateLimitFetches, 1, 'Concurrent getRateLimit calls must deduplicate into 1 fetch');
+  assertEqual(rl1?.remaining, 50, 'First caller receives rate limit data');
+  assertEqual(rl2?.remaining, 50, 'Second caller receives same rate limit data');
+
+  // Next call within 30s TTL should hit cache
+  pruneClock += 10_000;
+  const rlCached = await rateLimitDedupService.getRateLimit();
+  assertEqual(rateLimitFetches, 1, 'getRateLimit within 30s TTL must not trigger network fetch');
+  assertEqual(rlCached?.remaining, 50, 'Cached rate limit remains valid');
+
+  console.log('✓ All githubService caching, TTL, deduplication, bounded LRU, pruning, and error tests passed!');
 }
 
 runTests();
