@@ -384,7 +384,44 @@ async function runTests() {
     'Retry-After HTTP date string must be parsed correctly'
   );
 
-  console.log('✓ All githubService caching, TTL, deduplication, 5xx, invalid payload, pre-flight, and error tests passed!');
+  // 11. Test Bounded Cache Size and LRU Eviction
+  let boundedFetchCount = 0;
+  const boundedService = new GitHubService({
+    enableSessionStorage: false,
+    maxMemoryEntries: 3,
+    fetchFn: async (input) => {
+      boundedFetchCount++;
+      const urlStr = String(input);
+      const user = urlStr.split('/').pop() || 'unknown';
+      return createJsonResponse(createMockUser(user));
+    },
+  });
+
+  await boundedService.getUser('user1');
+  await boundedService.getUser('user2');
+  await boundedService.getUser('user3');
+  assertEqual(boundedFetchCount, 3, 'Fetched 3 distinct users');
+  assertEqual(boundedService.getCacheStats().memoryEntriesCount, 3, 'Cache reaches max limit of 3');
+
+  // Read user1 to refresh its LRU recency
+  await boundedService.getUser('user1');
+  assertEqual(boundedFetchCount, 3, 'Reading user1 from cache does not fetch');
+
+  // Add user4 -> should evict user2 (least recently used)
+  await boundedService.getUser('user4');
+  assertEqual(boundedFetchCount, 4, 'Fetching user4 increments fetch count');
+  assertEqual(boundedService.getCacheStats().memoryEntriesCount, 3, 'Cache remains bounded at 3');
+
+  // Verify user1 is still cached
+  const checkUser1 = await boundedService.getUser('user1');
+  assertEqual(checkUser1.fromCache, true, 'Recently accessed user1 remains in cache');
+
+  // Verify user2 was evicted (requires re-fetch)
+  const checkUser2 = await boundedService.getUser('user2');
+  assertEqual(checkUser2.fromCache, false, 'Evicted user2 must be re-fetched from network');
+  assertEqual(boundedFetchCount, 5, 'Re-fetching evicted user2 increases fetch count to 5');
+
+  console.log('✓ All githubService caching, TTL, deduplication, 5xx, invalid payload, pre-flight, and bounded LRU tests passed!');
 }
 
 runTests();
