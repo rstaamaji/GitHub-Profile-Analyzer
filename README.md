@@ -54,15 +54,16 @@ A developer analytics web application for inspecting and comparing public GitHub
 - **Component Memoization**: `StatCard`, `RepoCard`, `RepositoryInsightsCards`, and `RecentActivityList` are memoized via `React.memo` and callback handlers are stabilized with `useCallback` to prevent cascading re-renders across list operations.
 - **Code Splitting & Lazy Loading**: Heavy views (`RepoDetailView`, `AnalyticsContainer`, and `ProfileComparisonView`) are dynamically loaded on-demand via `React.lazy` and `Suspense`, dramatically accelerating initial page loads.
 - **Vendor Chunk Splitting**: Vite Rollup `manualChunks` isolates `vendor-react`, `vendor-charts` (Recharts & D3), and `vendor-dompurify`. Reduces initial application JavaScript chunk from ~836 kB down to ~105 kB (~24 kB gzip), eliminating chunk size warnings.
-- **TTL Caching** in `sessionStorage` (profiles: 5 min, repo lists: 3 min, repo details: 5 min, README: 10 min).
-- **In-flight Request Deduplication**: identical concurrent requests share one network call.
-- **Stale-on-error Fallback**: if a fresh request fails but a cache entry exists, the cached data is displayed with an explicit freshness indicator.
+- **TTL Caching & Bounded LRU Memory**: Dual-tier caching in memory and `sessionStorage` (profiles: 5 min, repo lists: 3 min, repo details: 5 min, README: 10 min, rate-limit: 30s) with strict capacity bounds (default 100 entries) and LRU eviction order preventing unbounded memory growth.
+- **Proactive Expired Cache Pruning**: Independent cache pruning mechanism (`pruneExpiredEntries()`) that purges expired records across memory and storage tiers with automatic quota-exceeded recovery.
+- **In-flight Request Deduplication**: Identical concurrent requests share one active network promise with isolated `AbortController` subscriber tracking across endpoints (including `/rate_limit`).
+- **Stale-on-error Fallback**: If a fresh request fails due to rate limit, network disruption, or server downtime, cached data is surfaced safely with explicit stale freshness metadata.
 - Automatic rate limit header extraction and live display in the header.
 - Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout.
 
 ### 🧪 Testing
 - 35 unit tests across 8 suites via Node.js built-in `--test` runner (using `tsx`).
-- Covers: caching/deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
+- Covers: caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 
