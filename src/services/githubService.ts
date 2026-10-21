@@ -1009,6 +1009,13 @@ export class GitHubService {
       return null;
     }
   }
+
+  /**
+   * Clears cached rate limit data, forcing the next lookup to query GitHub.
+   */
+  public clearRateLimitCache(): void {
+    this.memoryCache.delete('system:rate_limit');
+  }
 }
 
 export const githubService = new GitHubService();
