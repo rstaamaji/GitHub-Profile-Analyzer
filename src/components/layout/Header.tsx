@@ -43,10 +43,17 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, active
             <div
               role="status"
               aria-label={`GitHub API Rate Limit: ${rateLimit.remaining} of ${rateLimit.limit} remaining`}
-              title={`API calls remaining: ${rateLimit.remaining}/${rateLimit.limit}`}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] text-xs font-mono text-neutral-300"
+              title={`API quota: ${rateLimit.remaining}/${rateLimit.limit} requests available (resets hourly)`}
+              className={`flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#161b22] border text-xs font-mono transition-colors ${
+                rateLimit.remaining < 10
+                  ? 'border-amber-500/40 text-amber-300'
+                  : 'border-[#30363d] text-neutral-300'
+              }`}
             >
-              <Activity className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+              <Activity
+                className={`w-3.5 h-3.5 ${rateLimit.remaining < 10 ? 'text-amber-400' : 'text-emerald-400'}`}
+                aria-hidden="true"
+              />
               <span className="hidden sm:inline text-neutral-400">Rate Limit:</span>
               <span className={rateLimit.remaining < 10 ? 'text-amber-400 font-bold' : 'text-neutral-200'}>
                 {rateLimit.remaining}
