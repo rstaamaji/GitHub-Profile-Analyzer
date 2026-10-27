@@ -50,7 +50,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 sm:space-y-8 motion-safe:animate-in motion-safe:fade-in duration-300">
       {/* 1. Profile Summary Card */}
-      <ProfileHeader user={user} />
+      <ProfileHeader user={user} repos={repos} stats={stats} />
 
       {/* 2. Partial Failure Alert if profile succeeded but repository batch failed */}
       {repoLoadError && (

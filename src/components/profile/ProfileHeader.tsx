@@ -7,14 +7,17 @@ import {
   Calendar,
   ExternalLink,
 } from 'lucide-react';
-import type { GitHubUser } from '../../types/github';
+import type { DashboardOverviewStats, GitHubRepo, GitHubUser } from '../../types/github';
 import { sanitizeExternalUrl } from '../../utils/securitySanitizer';
+import { ExportMenu } from '../common/ExportMenu';
 
 interface ProfileHeaderProps {
   user: GitHubUser;
+  repos?: GitHubRepo[];
+  stats?: DashboardOverviewStats | null;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, repos = [], stats }) => {
   const memberSince = new Date(user.created_at).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -48,16 +51,19 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
               <div className="text-sm font-mono text-neutral-400 truncate">@{user.login}</div>
             </div>
 
-            <a
-              href={user.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open ${user.login}'s GitHub profile in a new tab`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shrink-0"
-            >
-              <span>GitHub Profile</span>
-              <ExternalLink className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-            </a>
+            <div className="flex items-center gap-2 shrink-0">
+              <ExportMenu user={user} repos={repos} stats={stats} />
+              <a
+                href={user.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${user.login}'s GitHub profile in a new tab`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shrink-0"
+              >
+                <span>GitHub Profile</span>
+                <ExternalLink className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+              </a>
+            </div>
           </div>
 
           {user.bio && (
