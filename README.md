@@ -45,6 +45,14 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Load more repos per profile for more accurate star/fork totals
 - Example quick-fill pairs included; swap A ↔ B button
 
+### 📥 Data Export & Reporting (CSV/JSON)
+- **Profile Summary (CSV)**: Generates RFC 4180 compliant CSV exports containing account metadata, bio, followers, repository metrics, and top programming languages.
+- **Repository List (CSV)**: Exports loaded repositories with names, descriptions, URLs, stars, forks, open issues, license, and push timestamps.
+- **Complete Report (JSON)**: Schema v1.0.0 structured JSON export bundling full user profile, aggregate statistics, and repository arrays with metadata timestamps.
+- **Spreadsheet Security**: Implements CSV formula injection defense (neutralizing `=`, `+`, `-`, `@` triggers) and prepends UTF-8 Byte Order Mark (`\uFEFF`) for seamless UTF-8 character display in Microsoft Excel and LibreOffice Calc.
+- **Lifecycle Resource Management**: Client-side object URLs (`URL.createObjectURL`) are safely revoked automatically after download initiation without persistent memory leaks or credentials in transit.
+- **Multi-View Integration**: One-click accessible export controls integrated seamlessly into both Profile Overview and Repository Explorer.
+
 ### 🚀 Performance & Reliability
 - **Comprehensive API Error Handling**: Graceful, user-friendly error recovery across all HTTP failure modes: 404 (Not Found), 403/429 (Rate Limit exceeded with local reset clock and remaining minutes estimate), 5xx (GitHub Service Outage / High Load), and unexpected/malformed JSON payloads.
 - **Pre-Flight Input Validation**: Validates GitHub username format prior to network calls, saving valuable unauthenticated rate limit quota from being wasted on invalid inputs.
@@ -62,8 +70,8 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout.
 
 ### 🧪 Testing
-- 35 unit tests across 8 suites via Node.js built-in `--test` runner (using `tsx`).
-- Covers: caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
+- 46 unit tests across 13 suites via Node.js built-in `--test` runner (using `tsx`).
+- Covers: CSV RFC 4180 escaping, spreadsheet formula injection defense, filename sanitization, UTF-8 BOM injection, profile summary and repository list CSV generation, schema-valid JSON generation, caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 
@@ -97,6 +105,7 @@ src/
 │   ├── languageAnalytics.ts       # Language distribution calculations
 │   ├── activityAnalytics.ts       # Push/update activity bucketing for charts
 │   ├── comparisonAnalytics.ts     # Side-by-side profile metric computation
+│   ├── exportUtils.ts             # CSV/JSON generation, RFC 4180 escaping, BOM injection
 │   └── accessibility.ts           # Focus management & ARIA helpers
 ├── components/
 │   ├── layout/
@@ -104,6 +113,7 @@ src/
 │   │   ├── Navigation.tsx         # Tab bar: Overview / Repositories / Analytics / Compare
 │   │   └── Footer.tsx             # App footer
 │   ├── common/
+│   │   ├── ExportMenu.tsx         # Dropdown menu for CSV & JSON downloads with safe blob lifecycle
 │   │   ├── LoadingState.tsx       # Skeleton placeholders
 │   │   ├── ErrorState.tsx         # 404 / 403 / network error recovery UI
 │   │   ├── EmptyState.tsx         # Landing screen with example usernames
