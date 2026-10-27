@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { escapeCsvValue } from './exportUtils';
+import {
+  escapeCsvValue,
+  sanitizeExportFilename,
+  getExportDateStamp,
+  buildExportFilename,
+} from './exportUtils';
 
 describe('exportUtils - escapeCsvValue', () => {
   it('returns empty string for null and undefined', () => {
@@ -28,5 +33,27 @@ describe('exportUtils - escapeCsvValue', () => {
     assert.strictEqual(escapeCsvValue('-12345'), "'-12345");
     assert.strictEqual(escapeCsvValue('@command'), "'@command");
     assert.strictEqual(escapeCsvValue('=cmd|’ /C calc’!A0'), "'=cmd|’ /C calc’!A0");
+  });
+});
+
+
+describe('exportUtils - sanitizeExportFilename & buildExportFilename', () => {
+  it('sanitizes unsafe filesystem characters and whitespaces', () => {
+    assert.strictEqual(sanitizeExportFilename('user/repo:name*test?'), 'user-repo-name-test');
+    assert.strictEqual(sanitizeExportFilename('   john doe  '), 'john-doe');
+    assert.strictEqual(sanitizeExportFilename('..invalid...'), 'invalid');
+    assert.strictEqual(sanitizeExportFilename(''), 'export');
+  });
+
+  it('builds standard date stamp and filename format', () => {
+    const testDate = new Date(2026, 9, 27); // 2026-10-27
+    const dateStamp = getExportDateStamp(testDate);
+    assert.strictEqual(dateStamp, '20261027');
+
+    const csvFilename = buildExportFilename('Octocat', 'profile-summary', 'csv', testDate);
+    assert.strictEqual(csvFilename, 'octocat-profile-summary-20261027.csv');
+
+    const jsonFilename = buildExportFilename('Octocat', 'complete-report', 'json', testDate);
+    assert.strictEqual(jsonFilename, 'octocat-complete-report-20261027.json');
   });
 });
