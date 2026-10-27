@@ -539,6 +539,7 @@ export function App() {
                     repos={repos}
                     totalPublicRepos={currentUser.public_repos}
                     username={currentUser.login}
+                    user={currentUser}
                     isLoadingMore={isLoadingMoreRepos}
                     hasMore={hasMoreRepos}
                     repoLoadError={repoLoadError}

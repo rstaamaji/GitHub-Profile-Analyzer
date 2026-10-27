@@ -16,17 +16,20 @@ import {
 import type {
   ApiError,
   GitHubRepo,
+  GitHubUser,
   RepoFilterOptions,
   RepoFilterType,
   RepoSortOption,
 } from '../../types/github';
 import { extractAvailableLanguages, filterAndSortRepos } from '../../utils/repoFilterSort';
 import { RepoCard } from './RepoCard';
+import { ExportMenu } from '../common/ExportMenu';
 
 interface RepoExplorerProps {
   repos: GitHubRepo[];
   totalPublicRepos: number;
   username: string;
+  user?: GitHubUser | null;
   isLoadingMore?: boolean;
   hasMore?: boolean;
   repoLoadError?: ApiError | null;
@@ -49,6 +52,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   repos,
   totalPublicRepos,
   username,
+  user,
   isLoadingMore = false,
   hasMore = false,
   repoLoadError = null,
@@ -358,39 +362,50 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
               </div>
 
               {/* Sort By Dropdown */}
-              <div className="relative self-start sm:self-auto sm:ml-auto">
-                <label htmlFor="repo-sort-select" className="sr-only">
-                  Sort repositories
-                </label>
-                <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-                  <span className="text-neutral-400 hidden sm:inline">Sort:</span>
-                  <select
-                    id="repo-sort-select"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as RepoSortOption)}
-                    className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium"
-                  >
-                    <option value="pushed" className="bg-[#161b22] text-neutral-200">
-                      Last Updated (Newest)
-                    </option>
-                    <option value="pushed_asc" className="bg-[#161b22] text-neutral-200">
-                      Last Updated (Oldest)
-                    </option>
-                    <option value="stars" className="bg-[#161b22] text-neutral-200">
-                      Most Stars
-                    </option>
-                    <option value="forks" className="bg-[#161b22] text-neutral-200">
-                      Most Forks
-                    </option>
-                    <option value="name" className="bg-[#161b22] text-neutral-200">
-                      Name (A–Z)
-                    </option>
-                    <option value="name_desc" className="bg-[#161b22] text-neutral-200">
-                      Name (Z–A)
-                    </option>
-                  </select>
+              <div className="relative self-start sm:self-auto sm:ml-auto flex items-center gap-2">
+                <div className="relative">
+                  <label htmlFor="repo-sort-select" className="sr-only">
+                    Sort repositories
+                  </label>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Sort:</span>
+                    <select
+                      id="repo-sort-select"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as RepoSortOption)}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium"
+                    >
+                      <option value="pushed" className="bg-[#161b22] text-neutral-200">
+                        Last Updated (Newest)
+                      </option>
+                      <option value="pushed_asc" className="bg-[#161b22] text-neutral-200">
+                        Last Updated (Oldest)
+                      </option>
+                      <option value="stars" className="bg-[#161b22] text-neutral-200">
+                        Most Stars
+                      </option>
+                      <option value="forks" className="bg-[#161b22] text-neutral-200">
+                        Most Forks
+                      </option>
+                      <option value="name" className="bg-[#161b22] text-neutral-200">
+                        Name (A–Z)
+                      </option>
+                      <option value="name_desc" className="bg-[#161b22] text-neutral-200">
+                        Name (Z–A)
+                      </option>
+                    </select>
+                  </div>
                 </div>
+
+                {/* Export Repos Action */}
+                <ExportMenu
+                  user={user ?? null}
+                  repos={filteredAndSortedRepos.length > 0 ? filteredAndSortedRepos : repos}
+                  mode="repositories-only"
+                  variant="compact"
+                  align="right"
+                />
               </div>
 
             </div>
