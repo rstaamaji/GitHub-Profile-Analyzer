@@ -33,9 +33,21 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Shows stars, forks, open issues, license, size, and creation/update dates
 - Links directly to GitHub and supports manual refresh
 
-### 📊 Analytics
-- **Language Analytics**: donut chart of primary language distribution across loaded repositories, with a ranked breakdown table
-- **Activity Analytics**: bar chart of repository push/update activity by time period (6 months / 12 months / 3 years), with full accessible data table for screen readers
+### 📊 Analytics & Insights
+- **Evidence-Based Dashboard Insights**: Dynamic profile analytics panel providing evidence-based metrics derived strictly from GitHub REST API data:
+  * **Star Concentration & Reach**: Quantifies star distribution and flags dominant repositories versus evenly dispersed catalogs.
+  * **Star Distribution Tiers**: Visual segmented bar categorizing repositories into 100+, 10–99, 1–9, and 0 star tiers.
+  * **Community Engagement & Forks**: Calculates fork-to-star ratio and average forks per repository.
+  * **Portfolio Architecture**: Composition breakdown of original source repositories versus forked and archived repositories.
+  * **Maintenance Velocity**: Tracks 30-day and 90-day code push windows with exact day recency.
+  * **Strict Methodological Disclosures**: Clear notices that metrics reflect public metadata and repository counts, without subjective inferences regarding code quality, line counts, or developer competency.
+- **Repository Comparative Analytics**: In-depth multi-metric comparison across loaded repositories:
+  * Interactive switching between Stargazers, Network Forks, Open Issues, and Repository Size (KB).
+  * Scope controls for Top 5, Top 10, or All Loaded repositories.
+  * Statistical summary banner calculating batch maximum, median, average (mean), and zero-value counts.
+  * Visual comparative ratio bars normalized to peak values with keyboard-accessible navigation and direct repository detail inspection.
+- **Language Analytics**: Donut chart of primary language distribution across loaded repositories with ranked breakdown table and explicit denominator disclosures.
+- **Activity Analytics**: Bar chart of repository push and update activity across 30-day, 90-day, or 12-month windows with full accessible data table for screen readers.
 
 ### ⚖️ Profile Comparison
 - Compare two public GitHub profiles side-by-side
@@ -70,8 +82,9 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout.
 
 ### 🧪 Testing
-- 46 unit tests across 13 suites via Node.js built-in `--test` runner (using `tsx`).
-- Covers: CSV RFC 4180 escaping, spreadsheet formula injection defense, filename sanitization, UTF-8 BOM injection, profile summary and repository list CSV generation, schema-valid JSON generation, caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
+### 🧪 Testing
+- 63 unit tests across 17 suites via Node.js built-in `--test` runner (using `tsx`).
+- Covers: Dashboard analytics insights, median and concentration calculations, star distribution tier bucketing, repository comparative analytics sorting and ratios, CSV RFC 4180 escaping, spreadsheet formula injection defense, filename sanitization, UTF-8 BOM injection, profile summary and repository list CSV generation, schema-valid JSON generation, caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 
@@ -102,6 +115,8 @@ src/
 ├── utils/
 │   ├── repoFilterSort.ts          # Pure filter/sort/search functions (fully tested)
 │   ├── overviewAnalytics.ts       # Profile stats aggregation (stars, forks, most-starred)
+│   ├── dashboardInsights.ts       # Evidence-based dashboard insights & star tiers
+│   ├── repoComparisonAnalytics.ts # Repository comparative metrics & ratio scaling
 │   ├── languageAnalytics.ts       # Language distribution calculations
 │   ├── activityAnalytics.ts       # Push/update activity bucketing for charts
 │   ├── comparisonAnalytics.ts     # Side-by-side profile metric computation
@@ -124,6 +139,7 @@ src/
 │   ├── profile/
 │   │   ├── ProfileOverview.tsx    # Overview tab container
 │   │   ├── ProfileHeader.tsx      # Avatar, bio, metadata
+│   │   ├── DashboardInsightsPanel.tsx   # Evidence-based profile metrics & star tiers
 │   │   ├── StatCard.tsx           # Reusable metric card
 │   │   ├── RepoExplorer.tsx       # Repositories tab: search, filter, sort, pagination
 │   │   ├── RepoCard.tsx           # Individual repository card
@@ -136,7 +152,8 @@ src/
 │   │   ├── LanguageAnalyticsView.tsx    # Language donut chart + table
 │   │   ├── LanguageChart.tsx      # Recharts donut chart
 │   │   ├── ActivityAnalyticsView.tsx    # Activity bar chart + controls
-│   │   └── ActivityChart.tsx      # Recharts bar chart
+│   │   ├── ActivityChart.tsx      # Recharts bar chart
+│   │   └── RepoComparisonView.tsx # Repository comparative analytics view
 │   └── compare/
 │       ├── ProfileComparisonView.tsx    # Comparison form + metric rows
 │       ├── ProfileCompareCard.tsx       # Per-profile comparison card
