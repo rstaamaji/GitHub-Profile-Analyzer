@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   buildRepoComparisonSummary,
-  METRIC_CONFIG,
 } from './repoComparisonAnalytics';
 import type { GitHubRepo } from '../types/github';
 

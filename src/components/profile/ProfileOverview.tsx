@@ -19,6 +19,7 @@ import { ProfileHeader } from './ProfileHeader';
 import { StatCard } from './StatCard';
 import { RepositoryInsightsCards } from './RepositoryInsightsCards';
 import { RecentActivityList } from './RecentActivityList';
+import { DashboardInsightsPanel } from './DashboardInsightsPanel';
 import { calculateOverviewStats } from '../../utils/overviewAnalytics';
 
 interface ProfileOverviewProps {
@@ -203,7 +204,14 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
         </div>
       ) : (
         <>
-          {/* Repository Insights (Most Starred, Recently Updated, Top Language) */}
+          {/* Evidence-Based Profile Analytics Insights */}
+          <DashboardInsightsPanel
+            user={user}
+            repos={repos}
+            onNavigateToTab={onNavigateToTab}
+          />
+
+          {/* Repository Highlights (Most Starred, Recently Updated, Top Language) */}
           <RepositoryInsightsCards
             mostStarredRepo={stats.mostStarredRepo}
             mostRecentlyPushedRepo={stats.mostRecentlyPushedRepo}

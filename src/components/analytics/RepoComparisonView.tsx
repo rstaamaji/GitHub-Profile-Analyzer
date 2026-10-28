@@ -13,7 +13,6 @@ import {
 import type { GitHubRepo, RepoComparisonMetric } from '../../types/github';
 import {
   buildRepoComparisonSummary,
-  METRIC_CONFIG,
 } from '../../utils/repoComparisonAnalytics';
 
 interface RepoComparisonViewProps {
