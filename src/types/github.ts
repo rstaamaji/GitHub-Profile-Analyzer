@@ -260,3 +260,65 @@ export interface ProfileComparisonSummary {
   languageRows: LanguageComparisonRow[];
 }
 
+export interface StarDistributionTier {
+  label: string;
+  rangeKey: '100+' | '10-99' | '1-9' | '0';
+  count: number;
+  percentage: number;
+}
+
+export interface DashboardInsightItem {
+  id: string;
+  category: 'stars' | 'engagement' | 'portfolio' | 'activity' | 'languages';
+  title: string;
+  value: string;
+  description: string;
+  contextNote?: string;
+  sentiment?: 'positive' | 'neutral' | 'info';
+}
+
+export interface DashboardAnalyticsInsights {
+  totalLoadedRepos: number;
+  totalPublicRepos: number;
+  isPartial: boolean;
+  totalBatchStars: number;
+  averageStars: number;
+  medianStars: number;
+  starConcentrationPercentage: number;
+  dominantRepo: { name: string; stars: number } | null;
+  starTiers: StarDistributionTier[];
+  totalBatchForks: number;
+  averageForks: number;
+  forkToStarRatio: number | null;
+  originalCount: number;
+  forkedCount: number;
+  archivedCount: number;
+  originalPercentage: number;
+  forkedPercentage: number;
+  archivedPercentage: number;
+  pushedIn30dCount: number;
+  pushedIn90dCount: number;
+  pushedIn30dPercentage: number;
+  pushedIn90dPercentage: number;
+  mostRecentPushDaysAgo: number | null;
+  insights: DashboardInsightItem[];
+}
+
+export type RepoComparisonMetric = 'stars' | 'forks' | 'issues' | 'size';
+
+export interface RepoComparisonItem {
+  id: number;
+  name: string;
+  fullName: string;
+  htmlUrl: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  forks: number;
+  openIssues: number;
+  sizeKb: number;
+  pushedAt: string;
+  isFork: boolean;
+  isArchived: boolean;
+}
+
