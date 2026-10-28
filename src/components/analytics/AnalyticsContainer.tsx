@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Code2, Activity } from 'lucide-react';
+import { Code2, Activity, BarChart3 } from 'lucide-react';
 import type { GitHubRepo } from '../../types/github';
 import { LanguageAnalyticsView } from './LanguageAnalyticsView';
 import { ActivityAnalyticsView } from './ActivityAnalyticsView';
+import { RepoComparisonView } from './RepoComparisonView';
 
 interface AnalyticsContainerProps {
   repos: GitHubRepo[];
@@ -23,31 +24,45 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
   onFetchMoreRepos,
   onSelectRepo,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'languages' | 'activity'>('languages');
+  const [activeSubTab, setActiveSubTab] = useState<'languages' | 'activity' | 'comparison'>(
+    'languages'
+  );
   const langTabRef = React.useRef<HTMLButtonElement>(null);
   const actTabRef = React.useRef<HTMLButtonElement>(null);
+  const compTabRef = React.useRef<HTMLButtonElement>(null);
+
+  const tabs: Array<{
+    key: 'languages' | 'activity' | 'comparison';
+    ref: React.RefObject<HTMLButtonElement | null>;
+  }> = [
+    { key: 'languages', ref: langTabRef },
+    { key: 'activity', ref: actTabRef },
+    { key: 'comparison', ref: compTabRef },
+  ];
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      if (activeSubTab === 'languages') {
-        setActiveSubTab('activity');
-        actTabRef.current?.focus();
-      } else {
-        setActiveSubTab('languages');
-        langTabRef.current?.focus();
-      }
+      const currentIndex = tabs.findIndex((t) => t.key === activeSubTab);
+      const nextIndex =
+        e.key === 'ArrowRight'
+          ? (currentIndex + 1) % tabs.length
+          : (currentIndex - 1 + tabs.length) % tabs.length;
+
+      const nextTab = tabs[nextIndex];
+      setActiveSubTab(nextTab.key);
+      nextTab.ref.current?.focus();
     }
   };
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 motion-safe:animate-in motion-safe:fade-in duration-200">
-      {/* Sub-navigation Tabs: Languages vs Repository Activity */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#30363d]">
+      {/* Sub-navigation Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#30363d]">
         <div
           role="tablist"
           aria-label="Analytics view options"
-          className="flex items-center gap-1.5 p-1 bg-[#161b22] border border-[#30363d] rounded-xl"
+          className="flex flex-wrap items-center gap-1.5 p-1 bg-[#161b22] border border-[#30363d] rounded-xl"
         >
           <button
             ref={langTabRef}
@@ -87,6 +102,26 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
           >
             <Activity className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
             <span>Activity Cadence</span>
+          </button>
+
+          <button
+            ref={compTabRef}
+            id="subtab-comparison"
+            type="button"
+            role="tab"
+            aria-selected={activeSubTab === 'comparison'}
+            aria-controls="subtabpanel-comparison"
+            tabIndex={activeSubTab === 'comparison' ? 0 : -1}
+            onClick={() => setActiveSubTab('comparison')}
+            onKeyDown={handleKeyDown}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+              activeSubTab === 'comparison'
+                ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
+                : 'text-neutral-400 hover:text-neutral-200'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+            <span>Repository Comparisons</span>
           </button>
         </div>
 
@@ -132,6 +167,26 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
           />
         )}
       </div>
+
+      <div
+        role="tabpanel"
+        id="subtabpanel-comparison"
+        aria-labelledby="subtab-comparison"
+        hidden={activeSubTab !== 'comparison'}
+      >
+        {activeSubTab === 'comparison' && (
+          <RepoComparisonView
+            repos={repos}
+            totalPublicRepos={totalPublicRepos}
+            username={username}
+            hasMoreRepos={hasMoreRepos}
+            isLoadingMore={isLoadingMore}
+            onFetchMoreRepos={onFetchMoreRepos}
+            onSelectRepo={onSelectRepo}
+          />
+        )}
+      </div>
     </div>
   );
 };
+
