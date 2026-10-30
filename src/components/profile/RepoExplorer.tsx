@@ -510,6 +510,124 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
               </div>
 
             </div>
+
+            {/* Active Filters Badge Bar */}
+            {hasActiveFilters && (
+              <div
+                aria-label="Active filters"
+                className="pt-2.5 border-t border-[#21262d] flex flex-wrap items-center gap-1.5 text-xs"
+              >
+                <span className="text-neutral-400 font-medium mr-1 text-[11px]">Active:</span>
+
+                {searchQuery.trim() !== '' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px]">
+                    <span>&ldquo;{searchQuery.trim()}&rdquo;</span>
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Remove search query filter"
+                      className="hover:text-emerald-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                {selectedLanguage !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-500/40 text-blue-300 text-[11px]">
+                    <span>
+                      Language: {selectedLanguage === 'none' ? 'None' : selectedLanguage}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLanguage('all')}
+                      aria-label="Remove language filter"
+                      className="hover:text-blue-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                {filterType !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[11px]">
+                    <span>
+                      Type:{' '}
+                      {filterType === 'sources'
+                        ? 'Original'
+                        : filterType === 'forks'
+                          ? 'Forks'
+                          : 'Archived'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFilterType('all')}
+                      aria-label="Remove repository type filter"
+                      className="hover:text-amber-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                {minStars > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-950/60 border border-yellow-500/40 text-yellow-300 text-[11px]">
+                    <span>Stars: ★ {minStars}+</span>
+                    <button
+                      type="button"
+                      onClick={() => setMinStars(0)}
+                      aria-label="Remove minimum stars filter"
+                      className="hover:text-yellow-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-yellow-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                {minForks > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-[11px]">
+                    <span>Forks: ⑂ {minForks}+</span>
+                    <button
+                      type="button"
+                      onClick={() => setMinForks(0)}
+                      aria-label="Remove minimum forks filter"
+                      className="hover:text-cyan-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                {activityRange !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/40 text-purple-300 text-[11px]">
+                    <span>
+                      Activity:{' '}
+                      {activityRange === '30d'
+                        ? '30 days'
+                        : activityRange === '90d'
+                          ? '90 days'
+                          : '1 year'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActivityRange('all')}
+                      aria-label="Remove activity range filter"
+                      className="hover:text-purple-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-[11px] text-neutral-400 hover:text-neutral-200 underline cursor-pointer ml-auto focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400 rounded px-1"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Repositories Cards Grid or Filter Empty State */}
