@@ -24,7 +24,11 @@ import type {
   RepoFilterType,
   RepoSortOption,
 } from '../../types/github';
-import { extractAvailableLanguages, filterAndSortRepos } from '../../utils/repoFilterSort';
+import {
+  countUnclassifiedLanguages,
+  extractAvailableLanguages,
+  filterAndSortRepos,
+} from '../../utils/repoFilterSort';
 import { RepoCard } from './RepoCard';
 import { ExportMenu } from '../common/ExportMenu';
 
@@ -104,6 +108,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
 
   // Dynamically compute languages present in the fetched dataset
   const availableLanguages = useMemo(() => extractAvailableLanguages(repos), [repos]);
+  const unclassifiedLanguageCount = useMemo(() => countUnclassifiedLanguages(repos), [repos]);
 
   // Client-side filtering and sorting across the loaded repository set
   const filteredAndSortedRepos = useMemo(
@@ -317,6 +322,11 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                           {lang} ({count})
                         </option>
                       ))}
+                      {unclassifiedLanguageCount > 0 && (
+                        <option value="none" className="bg-[#161b22] text-neutral-200">
+                          No detected language ({unclassifiedLanguageCount})
+                        </option>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -466,6 +476,12 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                       </option>
                       <option value="pushed_asc" className="bg-[#161b22] text-neutral-200">
                         Last Updated (Oldest)
+                      </option>
+                      <option value="created" className="bg-[#161b22] text-neutral-200">
+                        Newest Created
+                      </option>
+                      <option value="created_asc" className="bg-[#161b22] text-neutral-200">
+                        Oldest Created
                       </option>
                       <option value="stars" className="bg-[#161b22] text-neutral-200">
                         Most Stars
