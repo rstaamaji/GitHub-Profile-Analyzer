@@ -646,11 +646,19 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
               <h3 className="text-base font-semibold text-neutral-200">
                 No matching repositories found
               </h3>
-              <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
-                None of the <span className="font-mono text-neutral-300">{repos.length}</span>{' '}
-                loaded repositories matched your current search or filter combination.
+              <p className="text-xs text-neutral-400 max-w-lg mx-auto leading-relaxed">
+                None of the <span className="font-mono text-neutral-300 font-medium">{repos.length}</span>{' '}
+                loaded repositories match your active filter criteria
+                {searchQuery.trim() && (
+                  <span>
+                    {' '}matching &ldquo;<span className="text-neutral-200">{searchQuery.trim()}</span>&rdquo;
+                  </span>
+                )}.
+              </p>
+              <p className="text-[11px] text-neutral-400 max-w-md mx-auto">
+                Try loosening your filters, clearing language constraints, or resetting criteria to view all repositories.
                 {isPartialDataset &&
-                  ` Note: ${totalPublicRepos - repos.length} additional public repositories have not been loaded yet.`}
+                  ` Note: ${totalPublicRepos - repos.length} public repositories have not been loaded yet.`}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
                 <button
@@ -661,6 +669,20 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Reset all filters</span>
                 </button>
+                {isPartialDataset && onLoadMore && (
+                  <button
+                    onClick={onLoadMore}
+                    disabled={isLoadingMore}
+                    type="button"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#161b22] hover:bg-[#21262d] text-xs font-semibold text-emerald-400 hover:text-emerald-300 rounded-lg border border-emerald-500/30 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 ${isLoadingMore ? 'animate-spin' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span>Load more repos ({repos.length}/{totalPublicRepos})</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
