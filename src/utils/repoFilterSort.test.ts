@@ -325,4 +325,57 @@ describe('repoFilterSort utilities', () => {
     const allRepos = filterAndSortRepos(timeRepos, { activityRange: 'all' });
     assert.equal(allRepos.length, 5);
   });
+
+  it('filters repositories with no detected programming language using language: none', () => {
+    const mixed = [
+      createMockRepo({ id: 501, name: 'repo-rust', language: 'Rust' }),
+      createMockRepo({ id: 502, name: 'repo-no-lang', language: null }),
+      createMockRepo({ id: 503, name: 'repo-blank-lang', language: '   ' }),
+      createMockRepo({ id: 504, name: 'repo-ts', language: 'TypeScript' }),
+    ];
+
+    const unclassified = filterAndSortRepos(mixed, { language: 'none', sortBy: 'name' });
+    assert.deepEqual(unclassified.map((r) => r.name), ['repo-blank-lang', 'repo-no-lang']);
+  });
+
+  it('sorts repositories by creation date ascending and descending with tie-breaking', () => {
+    const repos = [
+      createMockRepo({
+        id: 601,
+        name: 'repo-2022',
+        created_at: '2022-01-01T00:00:00Z',
+      }),
+      createMockRepo({
+        id: 602,
+        name: 'repo-2024-b',
+        created_at: '2024-06-01T00:00:00Z',
+      }),
+      createMockRepo({
+        id: 603,
+        name: 'repo-2024-a',
+        created_at: '2024-06-01T00:00:00Z',
+      }),
+      createMockRepo({
+        id: 604,
+        name: 'repo-2025',
+        created_at: '2025-01-01T00:00:00Z',
+      }),
+    ];
+
+    const newestCreated = filterAndSortRepos(repos, { sortBy: 'created' });
+    assert.deepEqual(newestCreated.map((r) => r.name), [
+      'repo-2025',
+      'repo-2024-a',
+      'repo-2024-b',
+      'repo-2022',
+    ]);
+
+    const oldestCreated = filterAndSortRepos(repos, { sortBy: 'created_asc' });
+    assert.deepEqual(oldestCreated.map((r) => r.name), [
+      'repo-2022',
+      'repo-2024-a',
+      'repo-2024-b',
+      'repo-2025',
+    ]);
+  });
 });
