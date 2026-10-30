@@ -12,6 +12,16 @@ export function getSafeRepoTimestamp(repo: GitHubRepo): number {
 }
 
 /**
+ * Safely parses the creation timestamp for a repository.
+ * Returns 0 if invalid or missing.
+ */
+export function getSafeCreationTimestamp(repo: GitHubRepo): number {
+  if (!repo.created_at) return 0;
+  const time = new Date(repo.created_at).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+/**
  * Extracts distinct non-null programming languages from a repository list,
  * sorted by repository count descending, then alphabetically A-Z.
  */
@@ -30,8 +40,15 @@ export function extractAvailableLanguages(repos: GitHubRepo[]): Array<[string, n
 }
 
 /**
+ * Counts repositories that have no detected programming language (null, empty, or whitespace).
+ */
+export function countUnclassifiedLanguages(repos: GitHubRepo[]): number {
+  return repos.filter((r) => !r.language || r.language.trim() === '').length;
+}
+
+/**
  * Deterministically filters and sorts a list of repositories based on user-selected criteria.
- * Safely handles null descriptions, null languages, and identical timestamps.
+ * Safely handles null descriptions, null languages, empty strings, and identical timestamps.
  */
 export function filterAndSortRepos(
   repos: GitHubRepo[],
@@ -42,10 +59,14 @@ export function filterAndSortRepos(
     language = 'all',
     type = 'all',
     minStars = 0,
+    minForks = 0,
+    activityRange = 'all',
     sortBy = 'pushed',
   } = options;
 
   const query = searchQuery.trim().toLowerCase();
+  const now = Date.now();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
   return repos
     .filter((repo) => {
@@ -56,10 +77,13 @@ export function filterAndSortRepos(
         if (!matchName && !matchDesc) return false;
       }
 
-      // 2. Filter by primary programming language
+      // 2. Filter by primary programming language (supports specific languages, 'none' unclassified, or 'all')
       if (language !== 'all') {
-        if (!repo.language || repo.language !== language) {
-          return false;
+        const trimmedLang = (repo.language || '').trim();
+        if (language === 'none') {
+          if (trimmedLang !== '') return false;
+        } else {
+          if (trimmedLang !== language) return false;
         }
       }
 
@@ -71,6 +95,21 @@ export function filterAndSortRepos(
       // 4. Filter by minimum stargazers count
       if (minStars > 0 && (repo.stargazers_count ?? 0) < minStars) {
         return false;
+      }
+
+      // 5. Filter by minimum forks count
+      if (minForks > 0 && (repo.forks_count ?? 0) < minForks) {
+        return false;
+      }
+
+      // 6. Filter by last updated / pushed activity range
+      if (activityRange !== 'all') {
+        const timestamp = getSafeRepoTimestamp(repo);
+        if (timestamp === 0) return false;
+        const daysAgo = (now - timestamp) / MS_PER_DAY;
+        if (activityRange === '30d' && daysAgo > 30) return false;
+        if (activityRange === '90d' && daysAgo > 90) return false;
+        if (activityRange === '1y' && daysAgo > 365) return false;
       }
 
       return true;
@@ -94,6 +133,20 @@ export function filterAndSortRepos(
 
       if (sortBy === 'name_desc') {
         return b.name.localeCompare(a.name, undefined, { sensitivity: 'base' });
+      }
+
+      if (sortBy === 'created') {
+        const timeA = getSafeCreationTimestamp(a);
+        const timeB = getSafeCreationTimestamp(b);
+        if (timeB !== timeA) return timeB - timeA;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      }
+
+      if (sortBy === 'created_asc') {
+        const timeA = getSafeCreationTimestamp(a);
+        const timeB = getSafeCreationTimestamp(b);
+        if (timeA !== timeB) return timeA - timeB;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
       }
 
       if (sortBy === 'pushed_asc') {
