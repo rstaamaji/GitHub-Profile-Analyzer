@@ -162,16 +162,22 @@ export type RepoSortOption =
   | 'pushed_asc'
   | 'stars'
   | 'forks'
+  | 'created'
+  | 'created_asc'
   | 'name'
   | 'name_desc';
 
 export type RepoFilterType = 'all' | 'sources' | 'forks' | 'archived';
+
+export type RepoActivityFilter = 'all' | '30d' | '90d' | '1y';
 
 export interface RepoFilterOptions {
   searchQuery?: string;
   language?: string;
   type?: RepoFilterType;
   minStars?: number;
+  minForks?: number;
+  activityRange?: RepoActivityFilter;
   sortBy?: RepoSortOption;
 }
 
