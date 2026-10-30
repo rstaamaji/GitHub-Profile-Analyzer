@@ -12,11 +12,14 @@ import {
   FolderGit2,
   AlertCircle,
   RefreshCw,
+  GitFork,
+  Clock,
 } from 'lucide-react';
 import type {
   ApiError,
   GitHubRepo,
   GitHubUser,
+  RepoActivityFilter,
   RepoFilterOptions,
   RepoFilterType,
   RepoSortOption,
@@ -48,6 +51,22 @@ const MIN_STAR_OPTIONS: Array<{ label: string; value: number }> = [
   { label: '★ 1,000+', value: 1000 },
 ];
 
+const MIN_FORK_OPTIONS: Array<{ label: string; value: number }> = [
+  { label: 'All Forks', value: 0 },
+  { label: '⑂ 1+', value: 1 },
+  { label: '⑂ 5+', value: 5 },
+  { label: '⑂ 10+', value: 10 },
+  { label: '⑂ 50+', value: 50 },
+  { label: '⑂ 100+', value: 100 },
+];
+
+const ACTIVITY_RANGE_OPTIONS: Array<{ label: string; value: RepoActivityFilter }> = [
+  { label: 'Any Time', value: 'all' },
+  { label: 'Past 30 Days', value: '30d' },
+  { label: 'Past 90 Days', value: '90d' },
+  { label: 'Past 1 Year', value: '1y' },
+];
+
 export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   repos,
   totalPublicRepos,
@@ -65,6 +84,10 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialFilters?.language ?? 'all');
   const [filterType, setFilterType] = useState<RepoFilterType>(initialFilters?.type ?? 'all');
   const [minStars, setMinStars] = useState<number>(initialFilters?.minStars ?? 0);
+  const [minForks, setMinForks] = useState<number>(initialFilters?.minForks ?? 0);
+  const [activityRange, setActivityRange] = useState<RepoActivityFilter>(
+    initialFilters?.activityRange ?? 'all'
+  );
   const [sortBy, setSortBy] = useState<RepoSortOption>(initialFilters?.sortBy ?? 'pushed');
 
   // Reset filters cleanly if the active profile changes
@@ -74,6 +97,8 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
     setSelectedLanguage('all');
     setFilterType('all');
     setMinStars(0);
+    setMinForks(0);
+    setActivityRange('all');
     setSortBy('pushed');
   }
 
@@ -88,16 +113,20 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
         language: selectedLanguage,
         type: filterType,
         minStars,
+        minForks,
+        activityRange,
         sortBy,
       }),
-    [repos, searchQuery, selectedLanguage, filterType, minStars, sortBy]
+    [repos, searchQuery, selectedLanguage, filterType, minStars, minForks, activityRange, sortBy]
   );
 
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
     selectedLanguage !== 'all' ||
     filterType !== 'all' ||
-    minStars > 0;
+    minStars > 0 ||
+    minForks > 0 ||
+    activityRange !== 'all';
 
   const isDefaultSort = sortBy === 'pushed';
 
@@ -106,6 +135,8 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
     setSelectedLanguage('all');
     setFilterType('all');
     setMinStars(0);
+    setMinForks(0);
+    setActivityRange('all');
     setSortBy('pushed');
   }, []);
 
@@ -335,6 +366,60 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                       className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
                     >
                       {MIN_STAR_OPTIONS.map((opt) => (
+                        <option
+                          key={opt.value}
+                          value={opt.value}
+                          className="bg-[#161b22] text-neutral-200"
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Minimum Forks Filter Dropdown */}
+                <div className="relative">
+                  <label htmlFor="repo-min-forks-select" className="sr-only">
+                    Filter by minimum forks
+                  </label>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <GitFork className="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Forks:</span>
+                    <select
+                      id="repo-min-forks-select"
+                      value={minForks}
+                      onChange={(e) => setMinForks(Number(e.target.value))}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                    >
+                      {MIN_FORK_OPTIONS.map((opt) => (
+                        <option
+                          key={opt.value}
+                          value={opt.value}
+                          className="bg-[#161b22] text-neutral-200"
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Activity Range Filter Dropdown */}
+                <div className="relative">
+                  <label htmlFor="repo-activity-range-select" className="sr-only">
+                    Filter by update activity range
+                  </label>
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                    <Clock className="w-3.5 h-3.5 text-purple-400 shrink-0" aria-hidden="true" />
+                    <span className="text-neutral-400 hidden sm:inline">Activity:</span>
+                    <select
+                      id="repo-activity-range-select"
+                      value={activityRange}
+                      onChange={(e) => setActivityRange(e.target.value as RepoActivityFilter)}
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer pr-1"
+                    >
+                      {ACTIVITY_RANGE_OPTIONS.map((opt) => (
                         <option
                           key={opt.value}
                           value={opt.value}
