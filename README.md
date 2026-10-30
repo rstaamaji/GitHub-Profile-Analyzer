@@ -19,13 +19,25 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Account creation date and years-active summary
 - Repository Insights panel: most-starred repo, most recently pushed repo, top programming language
 
-### 📦 Repository Explorer
-- Loads repositories in paginated batches with a **Load more** button
-- **Search** repositories by name and description (client-side, instant)
-- **Filter** by programming language, repository type (original / fork / archived), and minimum star count
-- **Sort** by: Last Updated (newest / oldest), Most Stars, Most Forks, Name A–Z / Z–A
-- Null-safe sorting — repositories with missing dates or zero stars handled correctly
-- Result count display and filter reset button
+### 📦 Advanced Search, Filtering & Repository Explorer
+- Loads repositories in paginated batches with a **Load more** button and partial-coverage indicator.
+- **Instant Search**: Real-time matching across repository name and description with one-click clear button and `Escape` key handling.
+- **Multi-Dimensional Filtering**:
+  * **Language Filter**: Dynamically aggregates detected languages present in the dataset, plus a dedicated **"No detected language"** option for unclassified repositories.
+  * **Repository Type**: Filters across original sources, forks, or archived repositories.
+  * **Minimum Stars**: Quick threshold filtering (All, 1+, 10+, 50+, 100+, 500+, 1,000+).
+  * **Minimum Forks**: Forks threshold filtering (All, 1+, 5+, 10+, 50+, 100+).
+  * **Activity Window**: Temporal filtering by push recency (Past 30 Days, Past 90 Days, Past 1 Year, Any Time).
+- **8-Mode Deterministic Sorting**:
+  * Last Updated (Newest / Oldest)
+  * Newest Created / Oldest Created
+  * Most Stars
+  * Most Forks
+  * Name (A–Z / Z–A)
+  * Deterministic secondary tie-breaking by repository name ensures zero visual jumpiness when timestamps or counts are identical.
+- **Active Filter Chips**: Visual badge bar displaying every active search and filter criterion with individual dismiss buttons and a global "Reset all filters" button.
+- **Clear Match Denominator Counter**: Always displays exact counts: "Showing X matching of Y loaded repositories (account has Z total public)".
+- **Resilient Empty State**: When zero repositories match active criteria, displays contextual feedback with quick reset and an inline "Load more repos" button to fetch additional public repositories from the GitHub API.
 
 ### 📄 Repository Detail View
 - Opens a dedicated detail view per repository (click any repo card)
@@ -82,9 +94,8 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Accessible keyboard navigation, screen reader support, and reduced-motion compliance throughout.
 
 ### 🧪 Testing
-### 🧪 Testing
-- 63 unit tests across 17 suites via Node.js built-in `--test` runner (using `tsx`).
-- Covers: Dashboard analytics insights, median and concentration calculations, star distribution tier bucketing, repository comparative analytics sorting and ratios, CSV RFC 4180 escaping, spreadsheet formula injection defense, filename sanitization, UTF-8 BOM injection, profile summary and repository list CSV generation, schema-valid JSON generation, caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, repository filter/sort/search, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
+- 69 unit tests across 17 suites via Node.js built-in `--test` runner (using `tsx`).
+- Covers: Advanced search & multi-filter combinations, unclassified language filtering (`language: 'none'`), minimum forks and activity date range filtering (30d/90d/1y), creation date sorting with tie-breaking, safe creation and repo timestamp parsing, dashboard analytics insights, median and concentration calculations, star distribution tier bucketing, repository comparative analytics sorting and ratios, CSV RFC 4180 escaping, spreadsheet formula injection defense, filename sanitization, UTF-8 BOM injection, profile summary and repository list CSV generation, schema-valid JSON generation, caching/deduplication, bounded cache LRU eviction, proactive expired cache pruning, rate-limit request deduplication, 5xx server errors, invalid JSON payloads, pre-flight input validation, `Retry-After` parsing, overview stats aggregation, language extraction, activity analytics, profile comparison, accessibility helpers, and username/URL security sanitizers.
 
 ---
 
