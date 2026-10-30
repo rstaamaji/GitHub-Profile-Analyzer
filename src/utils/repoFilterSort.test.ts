@@ -261,4 +261,68 @@ describe('repoFilterSort utilities', () => {
     });
     assert.equal(getSafeCreationTimestamp(emptyRepo), 0);
   });
+
+  it('filters repositories by minimum forks count', () => {
+    const forkRepos = [
+      createMockRepo({ id: 301, name: 'zero-forks', forks_count: 0 }),
+      createMockRepo({ id: 302, name: 'ten-forks', forks_count: 10 }),
+      createMockRepo({ id: 303, name: 'fifty-forks', forks_count: 50 }),
+      createMockRepo({ id: 304, name: 'hundred-forks', forks_count: 100 }),
+    ];
+
+    const min10 = filterAndSortRepos(forkRepos, { minForks: 10, sortBy: 'forks' });
+    assert.deepEqual(min10.map((r) => r.name), ['hundred-forks', 'fifty-forks', 'ten-forks']);
+
+    const min50 = filterAndSortRepos(forkRepos, { minForks: 50, sortBy: 'forks' });
+    assert.deepEqual(min50.map((r) => r.name), ['hundred-forks', 'fifty-forks']);
+
+    const min200 = filterAndSortRepos(forkRepos, { minForks: 200 });
+    assert.deepEqual(min200, []);
+  });
+
+  it('filters repositories by activity range (30d, 90d, 1y, all)', () => {
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const timeRepos = [
+      createMockRepo({
+        id: 401,
+        name: 'recent-10d',
+        pushed_at: new Date(now - 10 * MS_PER_DAY).toISOString(),
+      }),
+      createMockRepo({
+        id: 402,
+        name: 'mid-60d',
+        pushed_at: new Date(now - 60 * MS_PER_DAY).toISOString(),
+      }),
+      createMockRepo({
+        id: 403,
+        name: 'past-200d',
+        pushed_at: new Date(now - 200 * MS_PER_DAY).toISOString(),
+      }),
+      createMockRepo({
+        id: 404,
+        name: 'old-500d',
+        pushed_at: new Date(now - 500 * MS_PER_DAY).toISOString(),
+      }),
+      createMockRepo({
+        id: 405,
+        name: 'no-timestamp',
+        pushed_at: '',
+        updated_at: '',
+        created_at: '',
+      }),
+    ];
+
+    const within30 = filterAndSortRepos(timeRepos, { activityRange: '30d' });
+    assert.deepEqual(within30.map((r) => r.name), ['recent-10d']);
+
+    const within90 = filterAndSortRepos(timeRepos, { activityRange: '90d', sortBy: 'name' });
+    assert.deepEqual(within90.map((r) => r.name), ['mid-60d', 'recent-10d']);
+
+    const within1y = filterAndSortRepos(timeRepos, { activityRange: '1y', sortBy: 'name' });
+    assert.deepEqual(within1y.map((r) => r.name), ['mid-60d', 'past-200d', 'recent-10d']);
+
+    const allRepos = filterAndSortRepos(timeRepos, { activityRange: 'all' });
+    assert.equal(allRepos.length, 5);
+  });
 });
