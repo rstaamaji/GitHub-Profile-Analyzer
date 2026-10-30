@@ -1,8 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  countUnclassifiedLanguages,
   extractAvailableLanguages,
   filterAndSortRepos,
+  getSafeCreationTimestamp,
   getSafeRepoTimestamp,
 } from './repoFilterSort';
 import type { GitHubRepo } from '../types/github';
@@ -223,5 +225,40 @@ describe('repoFilterSort utilities', () => {
       created_at: '',
     });
     assert.equal(getSafeRepoTimestamp(brokenDateRepo), 0);
+  });
+
+  it('countUnclassifiedLanguages counts repositories with null, undefined, or blank language strings', () => {
+    const mixed = [
+      createMockRepo({ id: 101, name: 'repo-null', language: null }),
+      createMockRepo({ id: 102, name: 'repo-empty', language: '' }),
+      createMockRepo({ id: 103, name: 'repo-spaces', language: '   ' }),
+      createMockRepo({ id: 104, name: 'repo-ts', language: 'TypeScript' }),
+      createMockRepo({ id: 105, name: 'repo-python', language: 'Python' }),
+    ];
+    assert.equal(countUnclassifiedLanguages(mixed), 3);
+    assert.equal(countUnclassifiedLanguages([]), 0);
+  });
+
+  it('getSafeCreationTimestamp safely returns creation epoch and handles invalid or missing values', () => {
+    const validRepo = createMockRepo({
+      id: 201,
+      name: 'created-valid',
+      created_at: '2024-06-15T10:30:00Z',
+    });
+    assert.equal(getSafeCreationTimestamp(validRepo), Date.parse('2024-06-15T10:30:00Z'));
+
+    const invalidRepo = createMockRepo({
+      id: 202,
+      name: 'created-invalid',
+      created_at: 'not-a-date',
+    });
+    assert.equal(getSafeCreationTimestamp(invalidRepo), 0);
+
+    const emptyRepo = createMockRepo({
+      id: 203,
+      name: 'created-empty',
+      created_at: '',
+    });
+    assert.equal(getSafeCreationTimestamp(emptyRepo), 0);
   });
 });
