@@ -463,9 +463,9 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = React
                 onClick={handleSwapInputs}
                 aria-label="Swap Developer A and Developer B usernames"
                 title="Swap Developer A and Developer B"
-                className="p-2.5 rounded-lg bg-[#0d1117] hover:bg-[#21262d] text-neutral-400 hover:text-neutral-200 border border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="p-2.5 min-h-[42px] min-w-[42px] inline-flex items-center justify-center rounded-lg bg-[#0d1117] hover:bg-[#21262d] text-neutral-400 hover:text-neutral-200 border border-[#30363d] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
-                <ArrowLeftRight className="w-4 h-4" aria-hidden="true" />
+                <ArrowLeftRight className="w-4 h-4 shrink-0" aria-hidden="true" />
               </button>
             </div>
 
@@ -503,7 +503,7 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = React
             <button
               type="submit"
               disabled={isComparing}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22]"
             >
               {isComparing ? (
                 <>
@@ -617,12 +617,12 @@ export const ProfileComparisonView: React.FC<ProfileComparisonViewProps> = React
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-mono">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-mono">
                   <span className="inline-flex items-center gap-1.5 text-emerald-400">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />@{displayUsernameA}
+                    <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shrink-0" />@{displayUsernameA}
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-sky-400">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-sky-500" />@{displayUsernameB}
+                    <span className="w-2.5 h-2.5 rounded-sm bg-sky-500 shrink-0" />@{displayUsernameB}
                   </span>
                 </div>
               </div>
