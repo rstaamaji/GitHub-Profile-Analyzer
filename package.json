@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "test": "npx tsx --test src/services/*.test.ts src/utils/*.test.ts",
+    "test": "npx --prefer-offline tsx --test src/services/*.test.ts src/utils/*.test.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },

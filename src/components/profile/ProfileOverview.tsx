@@ -91,7 +91,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
         </div>
       )}
 
-      {/* 3. Indikator Partial Dataset jika ada repositori yang belum ter-load */}
+      {/* 3. Partial Dataset indicator if some repositories have not been loaded yet */}
       {stats.isPartial && !repoLoadError && (
         <div
           role="status"
@@ -100,11 +100,11 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
           <div className="flex items-start gap-2.5 text-amber-300">
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <span className="font-semibold text-neutral-200">Data Repositori Sebagian: </span>
+              <span className="font-semibold text-neutral-200">Partial Repository Dataset: </span>
               <span>
-                Baru memuat <strong className="font-mono text-neutral-100">{repos.length}</strong> dari{' '}
-                <strong className="font-mono text-neutral-100">{user.public_repos}</strong> total repository publik akun ini.
-                Metrik stars dan insight batch mencerminkan data yang telah dimuat.
+                Loaded <strong className="font-mono text-neutral-100">{repos.length}</strong> of{' '}
+                <strong className="font-mono text-neutral-100">{user.public_repos}</strong> total public repositories for this account.
+                Star metrics and batch insights reflect the currently loaded repositories.
               </span>
             </div>
           </div>
@@ -119,12 +119,12 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
               {isLoadingMore ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin text-emerald-400" aria-hidden="true" />
-                  <span>Memuat batch...</span>
+                  <span>Loading batch...</span>
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-                  <span>Muat lebih banyak</span>
+                  <span>Load more</span>
                 </>
               )}
             </button>
@@ -160,13 +160,13 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = React.memo(({
           label="Batch Stars"
           value={stats.totalBatchStars}
           icon={<Star className="w-4 h-4 text-amber-400" aria-hidden="true" />}
-          hint={`Dari ${repos.length} repo termuat`}
+          hint={`From ${repos.length} loaded repos`}
         />
         <StatCard
           label="Batch Forks"
           value={stats.totalBatchForks}
           icon={<GitFork className="w-4 h-4 text-sky-400" aria-hidden="true" />}
-          hint={`Dari ${repos.length} repo termuat`}
+          hint={`From ${repos.length} loaded repos`}
         />
         <StatCard
           label="Public Gists"

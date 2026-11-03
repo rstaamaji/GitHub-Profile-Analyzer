@@ -35,7 +35,7 @@ const ProfileComparisonView = lazy(() =>
 const LazyFallback = () => (
   <div className="flex items-center justify-center py-16 text-neutral-400 text-sm">
     <RefreshCw className="w-5 h-5 animate-spin text-emerald-400 mr-2.5" aria-hidden="true" />
-    <span>Memuat tampilan...</span>
+    <span>Loading view...</span>
   </div>
 );
 
