@@ -309,27 +309,27 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 motion-safe:animate-in motion-safe:fade-in duration-200">
       {/* Top Breadcrumb & Return Action */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={onBack}
           type="button"
           aria-label="Back to repositories list"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[36px] rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+          <ArrowLeft className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
           <span>Back to Repositories</span>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => handleRetry(true)}
             disabled={isRefreshing || isLoadingReadme}
             type="button"
             title="Refresh repository metadata and README from GitHub API"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${isRefreshing ? 'motion-safe:animate-spin text-emerald-400' : 'text-neutral-400'}`}
+              className={`w-3.5 h-3.5 shrink-0 ${isRefreshing ? 'motion-safe:animate-spin text-emerald-400' : 'text-neutral-400'}`}
               aria-hidden="true"
             />
             <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
@@ -340,10 +340,10 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View ${repo.name} on GitHub (opens in a new tab)`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-semibold text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
             <span>View on GitHub</span>
-            <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
+            <ExternalLink className="w-3.5 h-3.5 opacity-70 shrink-0" aria-hidden="true" />
           </a>
         </div>
       </div>
@@ -373,7 +373,7 @@ export const RepoDetailView: React.FC<RepoDetailViewProps> = ({
               <span className="text-neutral-400 text-sm font-mono">{owner} /</span>
               <h1
                 id="repo-detail-heading"
-                className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-100"
+                className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-100 break-all sm:break-normal"
               >
                 {repo.name}
               </h1>

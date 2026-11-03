@@ -63,7 +63,7 @@ export const RepoCard: React.FC<RepoCardProps> = React.memo(({ repo, onSelectRep
                 <button
                   type="button"
                   onClick={() => onSelectRepo(repo)}
-                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-words focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm text-left cursor-pointer min-w-0"
+                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all sm:break-normal focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm text-left cursor-pointer min-w-0"
                 >
                   <span>{repo.name}</span>
                 </button>
@@ -72,7 +72,7 @@ export const RepoCard: React.FC<RepoCardProps> = React.memo(({ repo, onSelectRep
                   href={repo.html_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
+                  className="text-base font-semibold text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5 break-all sm:break-normal focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-sm"
                 >
                   <span>{repo.name}</span>
                   <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" aria-hidden="true" />
@@ -153,7 +153,7 @@ export const RepoCard: React.FC<RepoCardProps> = React.memo(({ repo, onSelectRep
       </div>
 
       {/* Card Footer: Metadata Metrics */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400 pt-3 border-t border-[#21262d]">
+      <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-2 text-xs text-neutral-400 pt-3 border-t border-[#21262d]">
         {/* Primary Language */}
         {repo.language && (
           <div className="flex items-center gap-1.5">
@@ -209,7 +209,7 @@ export const RepoCard: React.FC<RepoCardProps> = React.memo(({ repo, onSelectRep
         )}
 
         {/* Last updated */}
-        <div className="ml-auto text-[11px] text-neutral-400">Updated {updatedDate}</div>
+        <div className="ml-auto text-[11px] text-neutral-400 shrink-0">Updated {updatedDate}</div>
       </div>
     </article>
   );
