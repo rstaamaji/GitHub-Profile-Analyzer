@@ -42,23 +42,23 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, repos = [], 
         </div>
 
         {/* Profile Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 mb-2">
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-100 break-words">
+        <div className="flex-1 min-w-0 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-100 break-words leading-tight">
                 {user.name || user.login}
               </h2>
-              <div className="text-sm font-mono text-neutral-400 truncate">@{user.login}</div>
+              <div className="text-sm font-mono text-neutral-400 truncate mt-0.5">@{user.login}</div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
               <ExportMenu user={user} repos={repos} stats={stats} />
               <a
                 href={user.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open ${user.login}'s GitHub profile in a new tab`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-xs font-medium text-neutral-200 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shrink-0"
               >
                 <span>GitHub Profile</span>
                 <ExternalLink className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
@@ -73,15 +73,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, repos = [], 
           )}
 
           {/* Metadata badges */}
-          <div className="flex flex-wrap gap-y-1.5 gap-x-3 sm:gap-x-4 text-xs text-neutral-300 pt-2 border-t border-[#21262d]">
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-3 sm:gap-x-4 text-xs text-neutral-300 pt-2.5 border-t border-[#21262d]">
             {user.company && (
-              <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0" title={user.company}>
                 <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-                <span className="truncate max-w-[180px] sm:max-w-[200px]">{user.company}</span>
+                <span className="truncate max-w-[150px] sm:max-w-[240px]">{user.company}</span>
               </div>
             )}
             {user.location && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0" title={user.location}>
                 <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                 <span className="break-words">{user.location}</span>
               </div>
@@ -96,8 +96,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, repos = [], 
                     href={safeBlogUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title={user.blog}
                     aria-label={`${user.login}'s website (opens in a new tab)`}
-                    className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[200px] sm:max-w-[220px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    className="hover:text-blue-400 underline decoration-[#30363d] underline-offset-2 truncate max-w-[160px] sm:max-w-[220px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 py-0.5"
                   >
                     {user.blog.replace(/^https?:\/\//, '')}
                   </a>
@@ -112,7 +113,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, repos = [], 
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`@${user.twitter_username} on Twitter / X (opens in a new tab)`}
-                  className="hover:text-blue-400 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="hover:text-blue-400 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 py-0.5"
                 >
                   @{user.twitter_username}
                 </a>
