@@ -19,6 +19,15 @@
   }
 }
 
+/* Custom utility for clean touch-scrolling without scrollbar artifacts */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

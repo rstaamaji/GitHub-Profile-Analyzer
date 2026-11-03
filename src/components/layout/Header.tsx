@@ -38,27 +38,29 @@ export const Header: React.FC<HeaderProps> = ({ rateLimit, onResetToHome, active
           </div>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {rateLimit && (
             <div
               role="status"
               aria-label={`GitHub API Rate Limit: ${rateLimit.remaining} of ${rateLimit.limit} remaining`}
               title={`API quota: ${rateLimit.remaining}/${rateLimit.limit} requests available (resets hourly)`}
-              className={`flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#161b22] border text-xs font-mono transition-colors ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-md bg-[#161b22] border text-xs font-mono transition-colors shrink-0 ${
                 rateLimit.remaining < 10
                   ? 'border-amber-500/40 text-amber-300'
                   : 'border-[#30363d] text-neutral-300'
               }`}
             >
               <Activity
-                className={`w-3.5 h-3.5 ${rateLimit.remaining < 10 ? 'text-amber-400' : 'text-emerald-400'}`}
+                className={`w-3.5 h-3.5 shrink-0 ${rateLimit.remaining < 10 ? 'text-amber-400' : 'text-emerald-400'}`}
                 aria-hidden="true"
               />
               <span className="hidden sm:inline text-neutral-400">Rate Limit:</span>
-              <span className={rateLimit.remaining < 10 ? 'text-amber-400 font-bold' : 'text-neutral-200'}>
-                {rateLimit.remaining}
+              <span className="text-[11px] sm:text-xs">
+                <span className={rateLimit.remaining < 10 ? 'text-amber-400 font-bold' : 'text-neutral-200'}>
+                  {rateLimit.remaining}
+                </span>
+                <span className="text-neutral-400">/{rateLimit.limit}</span>
               </span>
-              <span className="text-neutral-400">/ {rateLimit.limit}</span>
             </div>
           )}
 
