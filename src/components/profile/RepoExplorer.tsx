@@ -456,20 +456,20 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
               </div>
 
-              {/* Sort By Dropdown */}
-              <div className="relative self-start sm:self-auto sm:ml-auto flex items-center gap-2">
-                <div className="relative">
+              {/* Sort By Dropdown & Export Action Row */}
+              <div className="relative self-start sm:self-auto sm:ml-auto flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#21262d]">
+                <div className="relative flex-1 sm:flex-initial">
                   <label htmlFor="repo-sort-select" className="sr-only">
                     Sort repositories
                   </label>
-                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition">
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-h-[38px] bg-[#0d1117] border border-[#30363d] focus-within:border-emerald-500/70 focus-within:ring-2 focus-within:ring-emerald-500/40 rounded-lg text-xs text-neutral-300 transition w-full sm:w-auto">
                     <ArrowUpDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
                     <span className="text-neutral-400 hidden sm:inline">Sort:</span>
                     <select
                       id="repo-sort-select"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as RepoSortOption)}
-                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium"
+                      className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer font-medium w-full sm:w-auto"
                     >
                       <option value="pushed" className="bg-[#161b22] text-neutral-200">
                         Last Updated (Newest)
@@ -520,13 +520,13 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 <span className="text-neutral-400 font-medium mr-1 text-[11px]">Active:</span>
 
                 {searchQuery.trim() !== '' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px]">
                     <span>&ldquo;{searchQuery.trim()}&rdquo;</span>
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
                       aria-label="Remove search query filter"
-                      className="hover:text-emerald-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-emerald-300 hover:text-white rounded-full hover:bg-emerald-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -534,7 +534,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
 
                 {selectedLanguage !== 'all' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-500/40 text-blue-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-950/60 border border-blue-500/40 text-blue-300 text-[11px]">
                     <span>
                       Language: {selectedLanguage === 'none' ? 'None' : selectedLanguage}
                     </span>
@@ -542,7 +542,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                       type="button"
                       onClick={() => setSelectedLanguage('all')}
                       aria-label="Remove language filter"
-                      className="hover:text-blue-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-blue-300 hover:text-white rounded-full hover:bg-blue-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -550,7 +550,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
 
                 {filterType !== 'all' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[11px]">
                     <span>
                       Type:{' '}
                       {filterType === 'sources'
@@ -563,7 +563,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                       type="button"
                       onClick={() => setFilterType('all')}
                       aria-label="Remove repository type filter"
-                      className="hover:text-amber-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-amber-300 hover:text-white rounded-full hover:bg-amber-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -571,13 +571,13 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
 
                 {minStars > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-950/60 border border-yellow-500/40 text-yellow-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-950/60 border border-yellow-500/40 text-yellow-300 text-[11px]">
                     <span>Stars: ★ {minStars}+</span>
                     <button
                       type="button"
                       onClick={() => setMinStars(0)}
                       aria-label="Remove minimum stars filter"
-                      className="hover:text-yellow-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-yellow-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-yellow-300 hover:text-white rounded-full hover:bg-yellow-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-yellow-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -585,13 +585,13 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
 
                 {minForks > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-[11px]">
                     <span>Forks: ⑂ {minForks}+</span>
                     <button
                       type="button"
                       onClick={() => setMinForks(0)}
                       aria-label="Remove minimum forks filter"
-                      className="hover:text-cyan-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-cyan-300 hover:text-white rounded-full hover:bg-cyan-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -599,7 +599,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 )}
 
                 {activityRange !== 'all' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/40 text-purple-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/40 text-purple-300 text-[11px]">
                     <span>
                       Activity:{' '}
                       {activityRange === '30d'
@@ -612,7 +612,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                       type="button"
                       onClick={() => setActivityRange('all')}
                       aria-label="Remove activity range filter"
-                      className="hover:text-purple-100 cursor-pointer p-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+                      className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-purple-300 hover:text-white rounded-full hover:bg-purple-900/40 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
                     </button>
@@ -622,7 +622,7 @@ export const RepoExplorer: React.FC<RepoExplorerProps> = ({
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="text-[11px] text-neutral-400 hover:text-neutral-200 underline cursor-pointer ml-auto focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400 rounded px-1"
+                  className="text-xs text-neutral-400 hover:text-neutral-100 underline cursor-pointer ml-auto focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400 rounded px-1.5 py-1 min-h-[32px] inline-flex items-center"
                 >
                   Clear all
                 </button>
