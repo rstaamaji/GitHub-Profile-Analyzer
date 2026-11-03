@@ -69,6 +69,16 @@ A developer analytics web application for inspecting and comparing public GitHub
 - Load more repos per profile for more accurate star/fork totals
 - Example quick-fill pairs included; swap A ↔ B button
 
+### 📱 User Experience, Responsive Design & Accessibility
+- **Cross-Viewport Optimization**: Fully responsive layouts calibrated across mobile (<640px), tablet (640px–1024px), laptop, and widescreen desktop displays.
+- **Touch Target Accessibility (WCAG 2.1 AA)**: All interactive buttons, tabs, input clear buttons, and filter chip removal targets enforce minimum 36px–44px tap targets for error-free mobile navigation.
+- **Header & Navigation Adaptation**: Responsive rate-limit indicator (compact `48/60` on mobile, full status badge on desktop); horizontally scrollable navigation tabs with cross-browser `.no-scrollbar` styling (`::-webkit-scrollbar { display: none }` and `scrollbar-width: none`).
+- **Search & Input Ergonomics**: Dynamically scaling input paddings (`pl-10 sm:pl-12 pr-24 sm:pr-36`), enlarged clear button tap target with assistive `aria-live="assertive"` notifications and keyboard focus rings.
+- **Profile Header & StatCard Scaling**: Name and bio metadata wrap cleanly without horizontal overflow; StatCard numbers feature responsive typography scaling (`text-lg sm:text-xl lg:text-2xl`) with hover tooltips preventing container blowout in 2-column mobile grids.
+- **Repository Explorer & Detail View**: Responsive filter/sort toolbars with clean separation; long repository names wrap via `break-all sm:break-normal`; README preview and repository metadata wrap smoothly on small screens.
+- **Analytics Sub-Tabs & Comparison Forms**: Sub-tab navigation adapts to full-width or flex rows on mobile; dual-profile comparison form stacks cleanly on mobile with an accessible 42x42px swap button and responsive metric comparison bars.
+- **Consistent Application Language**: Complete interface standardization in professional English across lazy fallbacks, loading states, empty hints, and pagination buttons.
+
 ### 📥 Data Export & Reporting (CSV/JSON)
 - **Profile Summary (CSV)**: Generates RFC 4180 compliant CSV exports containing account metadata, bio, followers, repository metrics, and top programming languages.
 - **Repository List (CSV)**: Exports loaded repositories with names, descriptions, URLs, stars, forks, open issues, license, and push timestamps.
