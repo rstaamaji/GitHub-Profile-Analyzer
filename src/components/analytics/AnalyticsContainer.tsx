@@ -62,7 +62,7 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
         <div
           role="tablist"
           aria-label="Analytics view options"
-          className="flex flex-wrap items-center gap-1.5 p-1 bg-[#161b22] border border-[#30363d] rounded-xl"
+          className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-1.5 p-1 bg-[#161b22] border border-[#30363d] rounded-xl w-full sm:w-auto"
         >
           <button
             ref={langTabRef}
@@ -74,13 +74,13 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
             tabIndex={activeSubTab === 'languages' ? 0 : -1}
             onClick={() => setActiveSubTab('languages')}
             onKeyDown={handleKeyDown}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+            className={`flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2 min-h-[38px] rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               activeSubTab === 'languages'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <Code2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+            <Code2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
             <span>Languages Distribution</span>
           </button>
 
@@ -94,13 +94,13 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
             tabIndex={activeSubTab === 'activity' ? 0 : -1}
             onClick={() => setActiveSubTab('activity')}
             onKeyDown={handleKeyDown}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+            className={`flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2 min-h-[38px] rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               activeSubTab === 'activity'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <Activity className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
+            <Activity className="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" />
             <span>Activity Cadence</span>
           </button>
 
@@ -114,13 +114,13 @@ export const AnalyticsContainer: React.FC<AnalyticsContainerProps> = ({
             tabIndex={activeSubTab === 'comparison' ? 0 : -1}
             onClick={() => setActiveSubTab('comparison')}
             onKeyDown={handleKeyDown}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+            className={`flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2 min-h-[38px] rounded-lg text-xs font-semibold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               activeSubTab === 'comparison'
                 ? 'bg-[#21262d] text-white shadow-sm border border-[#30363d]'
                 : 'text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <BarChart3 className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+            <BarChart3 className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
             <span>Repository Comparisons</span>
           </button>
         </div>
